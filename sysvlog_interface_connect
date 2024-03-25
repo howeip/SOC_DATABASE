@@ -1,0 +1,6553 @@
+//==============================================================================
+// copyright @ hwachip
+//------------------------------------------------------------------------------
+// file name        : sysvlog_connect.h
+// type             : macro
+// department       : DS
+// author           : Lion Li
+// author's email   : lion.li.com
+//------------------------------------------------------------------------------
+// release history
+// version   date         author           description
+// 0.0       2013-05-18   Lion Li          init version
+//------------------------------------------------------------------------------
+// purpose : include header file for SystemVerilog
+//------------------------------------------------------------------------------
+// parameters
+// param_name range : description     : default : units
+//------------------------------------------------------------------------------
+// reset strategy   : ..
+// clock domains    : ..
+// other            :
+//------------------------------------------------------------------------------
+//
+//==============================================================================
+
+
+
+`ifndef __SYSVLOG_INTERFACE_CONNECT__
+`define __SYSVLOG_INTERFACE_CONNECT__
+//  to avoid repeat declare
+
+
+//  there are diff connect bus:
+//  apb2_bus;
+//  apb3_bus;
+//  ahb_mst;
+//  ahb_slv;
+//  ahb_64_slv;
+//  ahb_lite;
+//  ahb_lite_64;
+//  DW_dmac_bus;
+//  atb3_32_idw7;
+//  atb3_64_idw7;
+//  atb4_32_idw7;
+//  axi4_stream_16_idw2;
+//  smic14_pll_bus;
+//  smic14_fnpll_bus;
+//  axi3_32_idw13;
+//  axi3_32_idw15;
+//  axi3_32_idw16;
+//  axi3_32_idw6;
+//  axi3_64_idw11;
+//  axi3_64_idw12;
+//  axi3_64_idw13;
+//  axi3_64_idw16;
+//  axi3_64_idw4;
+//  axi3_64_idw5;
+//  axi3_64_idw6;
+//  axi4_128_idw10;
+//  axi4_128_idw11;
+//  axi4_128_idw13;
+//  axi4_128_idw16;
+//  axi4_128_idw4;
+//  axi4_128_idw5;
+//  axi4_128_idw6;
+//  axi4_128_idw8;
+//  axi4_256_idw1;
+//  axi4_256_idw10;
+//  axi4_256_idw11;
+//  axi4_256_idw12;
+//  axi4_256_idw13;
+//  axi4_256_idw14;
+//  axi4_256_idw15;
+//  axi4_256_idw16;
+//  axi4_256_idw4;
+//  axi4_256_idw5;
+//  axi4_256_idw6;
+//  axi4_256_idw7;
+//  axi4_256_idw8;
+//  axi4_256_idw9;
+//  axi4_32_idw13;
+//  axi4_32_idw16;
+//  axi4_32_idw8;
+//  axi4_64_idw11;
+//  axi4_64_idw12;
+//  axi4_64_idw13;
+//  axi4_64_idw16;
+//  axi4_64_idw4;
+//  axi4_64_idw5;
+//  axi4_64_idw6;
+//  axi4_64_idw7;
+
+
+//  -=APB2 interface
+interface   apb2_bus  ;
+
+parameter   APB2_ADDR_WIDTH = 32 ;
+parameter   APB2_DATA_WIDTH = 32;
+
+
+logic                           psel            ;
+logic                           penable         ;
+logic                           pwrite          ;
+logic   [APB2_ADDR_WIDTH-1:0]   paddr           ;
+logic   [APB2_DATA_WIDTH-1:0]   pwdata          ;
+logic   [APB2_DATA_WIDTH-1:0]   prdata          ;
+
+
+
+modport master
+        (
+        output  psel    ,
+        output  penable    ,
+        output  pwrite    ,
+        output  paddr    ,
+        output  pwdata    ,
+
+        input   prdata
+        );
+
+
+modport slave
+        (
+        input  psel    ,
+        input  pwrite    ,
+        input  penable    ,
+        input  paddr    ,
+        input  pwdata    ,
+
+        output   prdata
+        );
+
+
+endinterface : apb2_bus
+//  APB2 interface=-
+
+
+
+
+//  -=APB3 interface
+interface   apb3_bus  ;
+
+parameter   APB3_ADDR_WIDTH = 32 ;
+parameter   APB3_DATA_WIDTH = 32;
+
+
+logic                           pready            ;
+logic                           pslverr            ;
+logic                           psel            ;
+logic                           pwrite          ;
+logic                           penable         ;
+logic   [APB3_ADDR_WIDTH-1:0]   paddr           ;
+logic   [APB3_DATA_WIDTH-1:0]   pwdata          ;
+logic   [APB3_DATA_WIDTH-1:0]   prdata          ;
+
+
+
+modport master
+        (
+        output  psel    ,
+        output  pwrite    ,
+        output  penable    ,
+        output  paddr    ,
+        output  pwdata    ,
+
+        input   pready    ,
+        input   pslverr    ,
+        input   prdata
+        );
+
+
+modport slave
+        (
+        input  psel    ,
+        input  pwrite    ,
+        input  penable    ,
+        input  paddr    ,
+        input  pwdata    ,
+
+        output  pready    ,
+        output  pslverr    ,
+        output  prdata
+        );
+
+
+endinterface : apb3_bus
+//  APB3 interface=-
+
+
+
+//  -=AHB_MST
+interface   ahb_mst ;
+
+parameter   AHB_ADDR_WIDTH = 32 ;
+parameter   AHB_DATA_WIDTH = 32 ;
+
+logic   [AHB_ADDR_WIDTH-1:0]    haddr   ;
+logic   [1:0]                   htrans  ;
+logic                           hwrite  ;
+logic   [2:0]                   hsize   ;
+logic   [2:0]                   hburst  ;
+logic   [3:0]                   hprot   ;
+logic   [AHB_DATA_WIDTH-1:0]    hwdata  ;
+logic                           hbusreq ;
+logic                           hlock   ;
+
+
+//  logic                           hsel    ;
+logic   [AHB_DATA_WIDTH-1:0]    hrdata  ;
+logic                           hready  ;
+logic   [1:0]                   hresp   ;
+
+logic                           hgrant  ;
+
+//  logic   [3:0]                   hmaster ;
+//  logic                           hmasterlock ;
+//  logic   [15:0]                  hsplit  ;
+
+
+modport master
+    (
+    output  haddr   ,
+    output  htrans  ,
+    output  hwrite  ,
+    output  hsize   ,
+    output  hburst  ,
+    output  hprot   ,
+    output  hwdata  ,
+    output  hbusreq ,
+    output  hlock   ,
+
+
+    input   hrdata  ,
+    input   hready  ,
+    input   hresp   ,
+    input   hgrant
+    );
+
+modport slave
+    (
+    input   haddr   ,
+    input   htrans  ,
+    input   hwrite  ,
+    input   hsize   ,
+    input   hburst  ,
+    input   hprot   ,
+    input   hwdata  ,
+    input   hbusreq ,
+    input   hlock   ,
+
+    output  hrdata  ,
+    output  hready  ,
+    output  hresp   ,
+    output  hgrant
+    );
+
+endinterface:ahb_mst
+//  AHB_MST=-
+
+
+//  -=AHB_SLV
+interface   ahb_slv ;
+
+parameter   AHB_ADDR_WIDTH = 32 ;
+parameter   AHB_DATA_WIDTH = 32 ;
+
+logic                           hsel        ;
+logic   [AHB_ADDR_WIDTH-1:0]    haddr       ;
+logic   [1:0]                   htrans      ;
+logic                           hwrite      ;
+logic   [2:0]                   hsize       ;
+logic   [2:0]                   hburst      ;
+logic   [3:0]                   hprot       ;
+logic   [AHB_DATA_WIDTH-1:0]    hwdata      ;
+logic                           hready_in   ;
+//logic                           hmastlock   ;
+
+logic   [AHB_DATA_WIDTH-1:0]    hrdata      ;
+logic                           hready      ;
+logic   [1:0]                   hresp       ;
+
+//  logic                           hbusreq ;
+//  logic                           hlock   ;
+//  logic                           hgrant  ;
+
+//  logic   [3:0]                   hmaster ;
+//  logic   [15:0]                  hsplit  ;
+
+
+modport slave
+    (
+    input   hsel        ,
+    input   haddr       ,
+    input   htrans      ,
+    input   hwrite      ,
+    input   hsize       ,
+    input   hburst      ,
+    input   hprot       ,
+    input   hwdata      ,
+    input   hready_in   ,
+//    input   hmastlock   ,
+
+    output  hrdata      ,
+    output  hready      ,
+    output  hresp
+    );
+
+
+modport master
+    (
+    output  hsel        ,
+    output  haddr       ,
+    output  htrans      ,
+    output  hwrite      ,
+    output  hsize       ,
+    output  hburst      ,
+    output  hprot       ,
+    output  hwdata      ,
+    output  hready_in   ,
+//    output  hmastlock   ,
+
+    input   hready      ,
+    input   hrdata      ,
+    input   hresp
+    );
+
+
+endinterface:ahb_slv
+
+//  -=AHB_SLV
+interface   ahb_64_slv ;
+
+parameter   AHB_ADDR_WIDTH = 32 ;
+parameter   AHB_DATA_WIDTH = 64 ;
+
+logic                           hsel        ;
+logic   [AHB_ADDR_WIDTH-1:0]    haddr       ;
+logic   [1:0]                   htrans      ;
+logic                           hwrite      ;
+logic   [2:0]                   hsize       ;
+logic   [2:0]                   hburst      ;
+logic   [3:0]                   hprot       ;
+logic   [AHB_DATA_WIDTH-1:0]    hwdata      ;
+logic                           hready_in   ;
+//logic                           hmastlock   ;
+
+logic   [AHB_DATA_WIDTH-1:0]    hrdata      ;
+logic                           hready      ;
+logic   [1:0]                   hresp       ;
+
+//  logic                           hbusreq ;
+//  logic                           hlock   ;
+//  logic                           hgrant  ;
+
+//  logic   [3:0]                   hmaster ;
+//  logic   [15:0]                  hsplit  ;
+
+
+modport slave
+    (
+    input   hsel        ,
+    input   haddr       ,
+    input   htrans      ,
+    input   hwrite      ,
+    input   hsize       ,
+    input   hburst      ,
+    input   hprot       ,
+    input   hwdata      ,
+    input   hready_in   ,
+//    input   hmastlock   ,
+
+    output  hrdata      ,
+    output  hready      ,
+    output  hresp
+    );
+
+
+modport master
+    (
+    output  hsel        ,
+    output  haddr       ,
+    output  htrans      ,
+    output  hwrite      ,
+    output  hsize       ,
+    output  hburst      ,
+    output  hprot       ,
+    output  hwdata      ,
+    output  hready_in   ,
+//    output  hmastlock   ,
+
+    input   hready      ,
+    input   hrdata      ,
+    input   hresp
+    );
+
+
+endinterface:ahb_64_slv
+
+
+
+//  AHB_SLV=-
+
+
+////  -=AHB_SLV
+//interface   ahb_slv ;
+//
+//parameter   AHB_ADDR_WIDTH = 32 ;
+//parameter   AHB_DATA_WIDTH = 32 ;
+//
+//logic   [AHB_ADDR_WIDTH-1:0]    haddr   ;
+//logic   [1:0]                   htrans  ;
+//logic                           hwrite  ;
+//logic   [2:0]                   hsize   ;
+//logic   [2:0]                   hburst  ;
+////  logic   [3:0]                   hprot   ;
+//
+//logic   [AHB_DATA_WIDTH-1:0]    hwdata  ;
+//
+//logic                           hsel    ;
+//logic   [AHB_DATA_WIDTH-1:0]    hrdata  ;
+//logic                           hready  ;
+//logic                           hready_in   ;
+//logic   [1:0]                   hresp   ;
+//
+////  logic                           hbusreq ;
+////  logic                           hlock   ;
+////  logic                           hgrant  ;
+//
+////  logic   [3:0]                   hmaster ;
+////  logic                           hmasterlock ;
+////  logic   [15:0]                  hsplit  ;
+//
+//
+//modport slave
+//    (
+//    input   hsel        ,
+//    input   haddr       ,
+//    input   htrans      ,
+//    input   hwrite      ,
+//    input   hwdata      ,
+//    input   hready_in   ,
+//    input   hsize       ,
+//    input   hburst      ,
+//
+//    output  hready      ,
+//    output  hrdata      ,
+//    output  hresp
+//    );
+//
+//
+//modport master
+//    (
+//    input   hready      ,
+//    input   hrdata      ,
+//    input   hresp       ,
+//
+//    output  hsel        ,
+//    output  haddr       ,
+//    output  htrans      ,
+//    output  hwrite      ,
+//    output  hwdata      ,
+//    output  hready_in   ,
+//    output  hsize       ,
+//    output  hburst
+//    );
+//
+//
+//endinterface:ahb_slv
+////  AHB_SLV=-
+
+//  -=AHB_LITE
+interface   ahb_lite ;
+
+parameter   AHB_ADDR_WIDTH = 32 ;
+parameter   AHB_DATA_WIDTH = 32 ;
+
+logic   [AHB_ADDR_WIDTH-1:0]    haddr       ;
+logic   [1:0]                   htrans      ;
+logic                           hwrite      ;
+logic   [2:0]                   hsize       ;
+logic   [2:0]                   hburst      ;
+logic   [AHB_DATA_WIDTH-1:0]    hwdata      ;
+logic   [3:0]                   hprot       ;
+logic                           hmasterlock ;
+
+logic   [AHB_DATA_WIDTH-1:0]    hrdata      ;
+logic                           hready      ;
+logic   [1:0]                   hresp       ;
+
+modport slave
+    (
+    input         haddr      ,
+    input         hwrite     ,
+    input         hwdata     ,
+    input         htrans     ,
+    input         hsize      ,
+    input         hburst     ,
+    input         hprot      ,
+    input         hmasterlock,
+
+
+    output        hready     ,
+    output        hrdata     ,
+    output        hresp
+    );
+modport master
+    (
+    output         haddr      ,
+    output         hwrite     ,
+    output         hwdata     ,
+    output         htrans     ,
+    output         hsize      ,
+    output         hburst     ,
+    output         hprot      ,
+    output         hmasterlock,
+
+    input          hready     ,
+    input          hrdata     ,
+    input          hresp
+       );
+endinterface:ahb_lite
+//  AHB_LITE=-
+
+//  -=AHB_LITE_64
+interface   ahb_lite_64 ;
+
+parameter   AHB_ADDR_WIDTH = 32 ;
+parameter   AHB_DATA_WIDTH = 64 ;
+
+logic   [AHB_ADDR_WIDTH-1:0]    haddr       ;
+logic   [1:0]                   htrans      ;
+logic                           hwrite      ;
+logic   [2:0]                   hsize       ;
+logic   [2:0]                   hburst      ;
+logic   [AHB_DATA_WIDTH-1:0]    hwdata      ;
+logic   [3:0]                   hprot       ;
+logic                           hmasterlock ;
+
+logic   [AHB_DATA_WIDTH-1:0]    hrdata      ;
+logic                           hready      ;
+logic   [1:0]                   hresp       ;
+
+modport slave
+    (
+    input         haddr      ,
+    input         hwrite     ,
+    input         hwdata     ,
+    input         htrans     ,
+    input         hsize      ,
+    input         hburst     ,
+    input         hprot      ,
+    input         hmasterlock,
+
+
+    output        hready     ,
+    output        hrdata     ,
+    output        hresp
+    );
+modport master
+    (
+    output         haddr      ,
+    output         hwrite     ,
+    output         hwdata     ,
+    output         htrans     ,
+    output         hsize      ,
+    output         hburst     ,
+    output         hprot      ,
+    output         hmasterlock,
+
+    input          hready     ,
+    input          hrdata     ,
+    input          hresp
+       );
+endinterface:ahb_lite_64
+//  AHB_LITE_64=-
+
+//  -=DW_DMAC
+interface   DW_dmac_bus ;
+
+logic    req   ;
+logic    single;
+logic    last;
+logic    ack;
+logic    finish;
+
+modport master
+    (
+    output  req,
+    output  single,
+    output  last,
+
+    input   ack,
+    input   finish      
+    );
+
+modport slave
+    (
+    input   req,
+    input   single,
+    input   last,
+
+    output  ack,
+    output  finish 
+    );
+
+
+endinterface:DW_dmac_bus
+//  DW_DMAC=-
+
+interface atb3_32_idw7;
+
+    logic [0:0]     afready     ;
+    logic [0:0]     afvalid     ;
+    logic [1:0]     atbytes     ;
+    logic [31:0]    atdata      ;
+    logic [6:0]     atid        ;
+    logic [0:0]     atready     ;
+    logic [0:0]     atvalid     ;
+
+modport master (
+    output  afready     ,
+    output  atbytes     ,
+    output  atdata      ,
+    output  atid        ,
+    output  atvalid     ,
+    input   afvalid     ,
+    input   atready
+);
+
+modport slave (
+    input   afready     ,
+    input   atbytes     ,
+    input   atdata      ,
+    input   atid        ,
+    input   atvalid     ,
+    output  afvalid     ,
+    output  atready
+);
+
+endinterface:atb3_32_idw7
+
+interface atb3_64_idw7;
+
+    logic [0:0]     afready     ;
+    logic [0:0]     afvalid     ;
+    logic [2:0]     atbytes     ;
+    logic [63:0]    atdata      ;
+    logic [6:0]     atid        ;
+    logic [0:0]     atready     ;
+    logic [0:0]     atvalid     ;
+
+modport master (
+    output  afready     ,
+    output  atbytes     ,
+    output  atdata      ,
+    output  atid        ,
+    output  atvalid     ,
+    input   afvalid     ,
+    input   atready
+);
+
+modport slave (
+    input   afready     ,
+    input   atbytes     ,
+    input   atdata      ,
+    input   atid        ,
+    input   atvalid     ,
+    output  afvalid     ,
+    output  atready
+);
+
+endinterface:atb3_64_idw7
+
+interface atb4_32_idw7;
+
+    logic [0:0]     afready     ;
+    logic [0:0]     afvalid     ;
+    logic [1:0]     atbytes     ;
+    logic [31:0]    atdata      ;
+    logic [6:0]     atid        ;
+    logic [0:0]     atready     ;
+    logic [0:0]     atvalid     ;
+    logic [0:0]     syncreq     ;
+
+modport master (
+    output  afready     ,
+    output  atbytes     ,
+    output  atdata      ,
+    output  atid        ,
+    output  atvalid     ,
+    input   afvalid     ,
+    input   atready     ,
+    input   syncreq
+);
+
+modport slave (
+    input   afready     ,
+    input   atbytes     ,
+    input   atdata      ,
+    input   atid        ,
+    input   atvalid     ,
+    output  afvalid     ,
+    output  atready     ,
+    output  syncreq
+);
+
+endinterface:atb4_32_idw7
+
+interface axi4_stream_16_idw2;
+logic        tvalid;
+logic        tready;
+logic [15:0] tdata;
+logic        tlast;
+logic [ 1:0] tid;
+
+modport master (
+    output tvalid,
+    input  tready,
+    output tdata,
+    output tlast,
+    output tid
+    );
+
+modport slave (
+    input  tvalid,
+    output tready,
+    input  tdata,
+    input  tlast,
+    input  tid
+    );
+endinterface:axi4_stream_16_idw2
+
+interface smic14_pll_bus;
+logic [7:0] m;
+logic [5:0] n;
+logic [1:0] od1;
+logic [1:0] od2;
+logic bp;
+logic pdrst;
+logic lkdt;
+
+modport master (
+    output m,
+	output n,
+	output od1,
+	output od2,
+	output bp,
+	output pdrst,
+    input lkdt
+	);
+
+modport slave (
+    input m,
+	input n,
+	input od1,
+	input od2,
+	input bp,
+	input pdrst,
+    output lkdt
+	);
+
+endinterface : smic14_pll_bus
+
+interface smic14_fnpll_bus;
+logic [7:0] m;
+logic [5:0] n;
+logic [1:0] od1;
+logic [1:0] od2;
+logic [19:0] frac;
+logic bp;
+logic pdrst;
+logic select;
+logic lkdt;
+
+modport master (
+    output m,
+	output n,
+	output od1,
+	output od2,
+	output frac,
+	output bp,
+	output pdrst,
+	output select,
+    input lkdt
+	);
+
+modport slave (
+    input m,
+	input n,
+	input od1,
+	input od2,
+	input frac,
+	input bp,
+	input pdrst,
+	input select,
+    output lkdt
+	);
+
+endinterface : smic14_fnpll_bus
+
+interface axi3_32_idw13;
+
+// Write Address Channel
+  logic [12:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 3:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 1:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [ 12:0]            wid;
+  logic [ 31:0]            wdata;
+  logic [  3:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [12:0]             bid;
+  logic [1:0]              bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [12:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 3:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 1:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 12:0]            rid;
+  logic [ 31:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wid   ,
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wid   ,
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi3_32_idw13
+
+interface axi3_32_idw15;
+
+// Write Address Channel
+  logic [14:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 3:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 1:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [ 14:0]            wid;
+  logic [ 31:0]            wdata;
+  logic [  3:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [14:0]             bid;
+  logic [1:0]              bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [14:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 3:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 1:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 14:0]            rid;
+  logic [ 31:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wid   ,
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wid   ,
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi3_32_idw15
+
+interface axi3_32_idw16;
+
+// Write Address Channel
+  logic [15:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 3:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 1:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [ 15:0]            wid;
+  logic [ 31:0]            wdata;
+  logic [  3:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [15:0]             bid;
+  logic [1:0]              bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [15:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 3:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 1:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 15:0]            rid;
+  logic [ 31:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wid   ,
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wid   ,
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi3_32_idw16
+
+interface axi3_32_idw6;
+
+// Write Address Channel
+  logic [ 5:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 3:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 1:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [  5:0]            wid;
+  logic [ 31:0]            wdata;
+  logic [  3:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 5:0]             bid;
+  logic [1:0]              bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 5:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 3:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 1:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  5:0]            rid;
+  logic [ 31:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wid   ,
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wid   ,
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi3_32_idw6
+
+interface axi3_64_idw11;
+
+// Write Address Channel
+  logic [10:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 3:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 1:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [ 10:0]            wid;
+  logic [ 63:0]            wdata;
+  logic [  7:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [10:0]             bid;
+  logic [1:0]              bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [10:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 3:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 1:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 10:0]            rid;
+  logic [ 63:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wid   ,
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wid   ,
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi3_64_idw11
+
+interface axi3_64_idw12;
+
+// Write Address Channel
+  logic [11:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 3:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 1:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [ 11:0]            wid;
+  logic [ 63:0]            wdata;
+  logic [  7:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [11:0]             bid;
+  logic [1:0]              bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [11:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 3:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 1:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 11:0]            rid;
+  logic [ 63:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wid   ,
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wid   ,
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi3_64_idw12
+
+interface axi3_64_idw13;
+
+// Write Address Channel
+  logic [12:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 3:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 1:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [ 12:0]            wid;
+  logic [ 63:0]            wdata;
+  logic [  7:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [12:0]             bid;
+  logic [1:0]              bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [12:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 3:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 1:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 12:0]            rid;
+  logic [ 63:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wid   ,
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wid   ,
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi3_64_idw13
+
+interface axi3_64_idw16;
+
+// Write Address Channel
+  logic [15:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 3:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 1:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [ 15:0]            wid;
+  logic [ 63:0]            wdata;
+  logic [  7:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [15:0]             bid;
+  logic [1:0]              bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [15:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 3:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 1:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 15:0]            rid;
+  logic [ 63:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wid   ,
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wid   ,
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi3_64_idw16
+
+interface axi3_64_idw4;
+
+// Write Address Channel
+  logic [ 3:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 3:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 1:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [  3:0]            wid;
+  logic [ 63:0]            wdata;
+  logic [  7:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 3:0]             bid;
+  logic [1:0]              bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 3:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 3:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 1:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  3:0]            rid;
+  logic [ 63:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wid   ,
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wid   ,
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi3_64_idw4
+
+interface axi3_64_idw5;
+
+// Write Address Channel
+  logic [ 4:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 3:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 1:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [  4:0]            wid;
+  logic [ 63:0]            wdata;
+  logic [  7:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 4:0]             bid;
+  logic [1:0]              bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 4:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 3:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 1:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  4:0]            rid;
+  logic [ 63:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wid   ,
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wid   ,
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi3_64_idw5
+
+interface axi3_64_idw6;
+
+// Write Address Channel
+  logic [ 5:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 3:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 1:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [  5:0]            wid;
+  logic [ 63:0]            wdata;
+  logic [  7:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 5:0]             bid;
+  logic [1:0]              bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 5:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 3:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 1:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  5:0]            rid;
+  logic [ 63:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wid   ,
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wid   ,
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi3_64_idw6
+
+interface axi4_128_idw10;
+
+// Write Address Channel
+  logic [ 9:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [127:0]            wdata;
+  logic [ 15:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 9:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 9:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  9:0]            rid;
+  logic [127:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_128_idw10
+
+interface axi4_128_idw11;
+
+// Write Address Channel
+  logic [10:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [127:0]            wdata;
+  logic [ 15:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [10:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [10:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 10:0]            rid;
+  logic [127:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_128_idw11
+
+interface axi4_128_idw13;
+
+// Write Address Channel
+  logic [12:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [127:0]            wdata;
+  logic [ 15:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [12:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [12:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 12:0]            rid;
+  logic [127:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_128_idw13
+
+interface axi4_128_idw16;
+
+// Write Address Channel
+  logic [15:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [127:0]            wdata;
+  logic [ 15:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [15:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [15:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 15:0]            rid;
+  logic [127:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_128_idw16
+
+interface axi4_128_idw4;
+
+// Write Address Channel
+  logic [ 3:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [127:0]            wdata;
+  logic [ 15:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 3:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 3:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  3:0]            rid;
+  logic [127:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_128_idw4
+
+interface axi4_128_idw5;
+
+// Write Address Channel
+  logic [ 4:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [127:0]            wdata;
+  logic [ 15:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 4:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 4:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  4:0]            rid;
+  logic [127:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_128_idw5
+
+interface axi4_128_idw6;
+
+// Write Address Channel
+  logic [ 5:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [127:0]            wdata;
+  logic [ 15:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 5:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 5:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  5:0]            rid;
+  logic [127:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_128_idw6
+
+interface axi4_128_idw8;
+
+// Write Address Channel
+  logic [ 7:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [127:0]            wdata;
+  logic [ 15:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 7:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 7:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  7:0]            rid;
+  logic [127:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_128_idw8
+
+interface axi4_256_idw1;
+
+// Write Address Channel
+  logic [ 0:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [255:0]            wdata;
+  logic [ 31:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 0:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 0:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  0:0]            rid;
+  logic [255:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_256_idw1
+
+interface axi4_256_idw10;
+
+// Write Address Channel
+  logic [ 9:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [255:0]            wdata;
+  logic [ 31:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 9:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 9:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  9:0]            rid;
+  logic [255:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_256_idw10
+
+interface axi4_256_idw11;
+
+// Write Address Channel
+  logic [10:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [255:0]            wdata;
+  logic [ 31:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [10:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [10:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 10:0]            rid;
+  logic [255:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_256_idw11
+
+interface axi4_256_idw12;
+
+// Write Address Channel
+  logic [11:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [255:0]            wdata;
+  logic [ 31:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [11:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [11:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 11:0]            rid;
+  logic [255:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_256_idw12
+
+interface axi4_256_idw13;
+
+// Write Address Channel
+  logic [12:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [255:0]            wdata;
+  logic [ 31:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [12:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [12:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 12:0]            rid;
+  logic [255:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_256_idw13
+
+interface axi4_256_idw14;
+
+// Write Address Channel
+  logic [13:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [255:0]            wdata;
+  logic [ 31:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [13:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [13:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 13:0]            rid;
+  logic [255:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_256_idw14
+
+interface axi4_256_idw15;
+
+// Write Address Channel
+  logic [14:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [255:0]            wdata;
+  logic [ 31:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [14:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [14:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 14:0]            rid;
+  logic [255:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_256_idw15
+
+interface axi4_256_idw16;
+
+// Write Address Channel
+  logic [15:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [255:0]            wdata;
+  logic [ 31:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [15:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [15:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 15:0]            rid;
+  logic [255:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_256_idw16
+
+interface axi4_256_idw4;
+
+// Write Address Channel
+  logic [ 3:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [255:0]            wdata;
+  logic [ 31:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 3:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 3:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  3:0]            rid;
+  logic [255:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_256_idw4
+
+interface axi4_256_idw5;
+
+// Write Address Channel
+  logic [ 4:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [255:0]            wdata;
+  logic [ 31:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 4:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 4:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  4:0]            rid;
+  logic [255:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_256_idw5
+
+interface axi4_256_idw6;
+
+// Write Address Channel
+  logic [ 5:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [255:0]            wdata;
+  logic [ 31:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 5:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 5:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  5:0]            rid;
+  logic [255:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_256_idw6
+
+interface axi4_256_idw7;
+
+// Write Address Channel
+  logic [ 6:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [255:0]            wdata;
+  logic [ 31:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 6:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 6:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  6:0]            rid;
+  logic [255:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_256_idw7
+
+interface axi4_256_idw8;
+
+// Write Address Channel
+  logic [ 7:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [255:0]            wdata;
+  logic [ 31:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 7:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 7:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  7:0]            rid;
+  logic [255:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_256_idw8
+
+interface axi4_256_idw9;
+
+// Write Address Channel
+  logic [ 8:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [255:0]            wdata;
+  logic [ 31:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 8:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 8:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  8:0]            rid;
+  logic [255:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_256_idw9
+
+interface axi4_32_idw13;
+
+// Write Address Channel
+  logic [12:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [ 31:0]            wdata;
+  logic [  3:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [12:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [12:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 12:0]            rid;
+  logic [ 31:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_32_idw13
+
+interface axi4_32_idw16;
+
+// Write Address Channel
+  logic [15:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [ 31:0]            wdata;
+  logic [  3:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [15:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [15:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 15:0]            rid;
+  logic [ 31:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_32_idw16
+
+interface axi4_32_idw8;
+
+// Write Address Channel
+  logic [ 7:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [ 31:0]            wdata;
+  logic [  3:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 7:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 7:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  7:0]            rid;
+  logic [ 31:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_32_idw8
+
+interface axi4_64_idw11;
+
+// Write Address Channel
+  logic [10:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [ 63:0]            wdata;
+  logic [  7:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [10:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [10:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 10:0]            rid;
+  logic [ 63:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_64_idw11
+
+interface axi4_64_idw12;
+
+// Write Address Channel
+  logic [11:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [ 63:0]            wdata;
+  logic [  7:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [11:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [11:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 11:0]            rid;
+  logic [ 63:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_64_idw12
+
+interface axi4_64_idw13;
+
+// Write Address Channel
+  logic [12:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [ 63:0]            wdata;
+  logic [  7:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [12:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [12:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 12:0]            rid;
+  logic [ 63:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_64_idw13
+
+interface axi4_64_idw16;
+
+// Write Address Channel
+  logic [15:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [ 63:0]            wdata;
+  logic [  7:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [15:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [15:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [ 15:0]            rid;
+  logic [ 63:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_64_idw16
+
+interface axi4_64_idw4;
+
+// Write Address Channel
+  logic [ 3:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [ 63:0]            wdata;
+  logic [  7:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 3:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 3:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  3:0]            rid;
+  logic [ 63:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_64_idw4
+
+interface axi4_64_idw5;
+
+// Write Address Channel
+  logic [ 4:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [ 63:0]            wdata;
+  logic [  7:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 4:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 4:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  4:0]            rid;
+  logic [ 63:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_64_idw5
+
+interface axi4_64_idw6;
+
+// Write Address Channel
+  logic [ 5:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [ 63:0]            wdata;
+  logic [  7:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 5:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 5:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  5:0]            rid;
+  logic [ 63:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_64_idw6
+
+interface axi4_64_idw7;
+
+// Write Address Channel
+  logic [ 6:0]             awid;
+  logic [31:0]             awaddr;
+  logic [ 7:0]             awlen;
+  logic [ 2:0]             awsize;
+  logic [ 1:0]             awburst;
+  logic [ 0:0]             awlock;
+  logic [ 3:0]             awcache;
+  logic [ 2:0]             awprot;
+  logic                    awvalid;
+  logic                    awready;
+// Write Data Channel
+  logic [ 63:0]            wdata;
+  logic [  7:0]            wstrb;
+  logic                    wlast;
+  logic                    wvalid;
+  logic                    wready;
+// Write Response Channel
+  logic [ 6:0]             bid;
+  logic [ 1:0]             bresp;
+  logic                    bvalid;
+  logic                    bready;
+// Read Address Channel
+  logic [ 6:0]             arid;
+  logic [31:0]             araddr;
+  logic [ 7:0]             arlen;
+  logic [ 2:0]             arsize;
+  logic [ 1:0]             arburst;
+  logic [ 0:0]             arlock;
+  logic [ 3:0]             arcache;
+  logic [ 2:0]             arprot;
+  logic                    arvalid;
+  logic                    arready;
+// Read Data Channel
+  logic [  6:0]            rid;
+  logic [ 63:0]            rdata;
+  logic [  1:0]            rresp;
+  logic                    rlast;
+  logic                    rvalid;
+  logic                    rready;
+
+modport master(
+// Write Address Channel
+  output awid   ,
+  output awaddr ,
+  output awlen  ,
+  output awsize ,
+  output awburst,
+  output awlock ,
+  output awcache,
+  output awprot ,
+  output awvalid,
+  input  awready,
+// write data channel
+  output wdata ,
+  output wstrb ,
+  output wlast ,
+  output wvalid,
+  input  wready,
+// write response channel
+  input  bid   ,
+  input  bresp ,
+  input  bvalid,
+  output bready,
+// read address channel
+  output arid   ,
+  output araddr ,
+  output arlen  ,
+  output arsize ,
+  output arburst,
+  output arlock ,
+  output arcache,
+  output arprot ,
+  output arvalid,
+  input  arready,
+// read data channel
+  input  rid   ,
+  input  rdata ,
+  input  rresp ,
+  input  rlast ,
+  input  rvalid,
+  output rready 
+);
+
+modport slave(
+// write address channel
+  input  awid   ,
+  input  awaddr ,
+  input  awlen  ,
+  input  awsize ,
+  input  awburst,
+  input  awlock ,
+  input  awcache,
+  input  awprot ,
+  input  awvalid,
+  output awready,
+// write data channel
+  input  wdata ,
+  input  wstrb ,
+  input  wlast ,
+  input  wvalid,
+  output wready,
+// write response channel
+  output bid   ,
+  output bresp ,
+  output bvalid,
+  input  bready,
+// read address channel
+  input  arid   ,
+  input  araddr ,
+  input  arlen  ,
+  input  arsize ,
+  input  arburst,
+  input  arlock ,
+  input  arcache,
+  input  arprot ,
+  input  arvalid,
+  output arready,
+// read data channel
+  output rid   ,
+  output rdata ,
+  output rresp ,
+  output rlast ,
+  output rvalid,
+  input  rready 
+);
+endinterface:axi4_64_idw7
+`endif
