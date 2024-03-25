@@ -1,0 +1,224 @@
+// +FHDR----------------------------------------------------------------------------
+// Device        : asic
+// Author        : eric.wang
+// Email         : ericw@cygnusemi.com
+// Created On    : 2022/06/30 16:00
+// Last Modified : 2023/01/30 21:01
+// File Name     : sync_fifo.v
+// Description   :
+//         
+// Copyright (c) 2022 Cygnusemi.
+// ALL RIGHTS RESERVED
+// 
+// ---------------------------------------------------------------------------------
+// Modification History:
+// Date         By              Version                 Change Description
+// ---------------------------------------------------------------------------------
+// 2022/06/30   eric.wang       1.0                     Original
+// -FHDR----------------------------------------------------------------------------
+module sync_fifo_ctrl #(
+    parameter DATA_WIDTH   = 32                   ,
+    parameter DATA_DEPTH   = 16                   ,      
+    parameter DATA_PIPE_IN = 0                    ,
+    parameter DATA_PIPE_OUT= 0                    ,
+    parameter DATA_FWFT    = 0                    ,
+    parameter ADDR_WIDTH   = $clog2(DATA_DEPTH)   ,
+    parameter WORD_CNT_WID = $clog2(DATA_DEPTH+DATA_PIPE_IN+(DATA_PIPE_OUT*2)+1)
+)
+(
+    input                      clk   ,
+    input                      rst_n ,
+    input                      srst  ,
+    input                      w_en  ,
+    input                      r_en       ,
+    input  [WORD_CNT_WID-1:0]  afull_thrd ,
+    input  [WORD_CNT_WID-1:0]  aempty_thrd,
+    input  [DATA_WIDTH-1 : 0]  wdata      ,
+    output [DATA_WIDTH-1 : 0]  rdata      ,
+    output                     ram_full   ,
+    output                     ram_empty  ,
+    output                     fifo_full  ,
+    output                     fifo_afull ,
+    output                     fifo_empty ,
+    output                     fifo_aempty,
+    output [WORD_CNT_WID-1:0]  word_cnt   ,
+
+    //tpsram/regfile read/write 
+    output [ADDR_WIDTH-1  :0]  waddr      ,
+    output [ADDR_WIDTH-1  :0]  raddr      ,
+    output [DATA_WIDTH-1  :0]  wdata_mem  ,
+    output                     wea        ,
+    output                     reb        ,
+    input  [DATA_WIDTH-1  :0]  rdata_mem
+);
+
+
+reg   [ADDR_WIDTH-1  :0]  rptr;
+reg   [ADDR_WIDTH-1  :0]  wptr;
+reg   [WORD_CNT_WID-1:0]  cnt;
+reg                       pin_vld;
+reg                       pfeth_vld;
+reg   [DATA_WIDTH-1  :0]  rdata_fetch;
+reg   [DATA_WIDTH-1  :0]  rdata_pipe;
+reg                       ram_dv;
+
+generate if(DATA_PIPE_IN) begin: wdata_pipe
+reg [DATA_WIDTH-1  :0] wdata_pipe;
+
+always @(posedge clk or negedge rst_n) begin
+    if(!rst_n)
+        wdata_pipe <= {(DATA_WIDTH){1'b0}};
+    else if(w_en && (!pin_vld || (pin_vld & !ram_full)))
+        wdata_pipe <= wdata;
+end
+
+always @(posedge clk or negedge rst_n) begin
+    if(!rst_n)
+        pin_vld <= 1'b0;
+    else if(srst)
+        pin_vld <= 1'b0;
+    else if(w_en && (!pin_vld || (pin_vld & !ram_full)))
+        pin_vld <= 1'b1;
+    else if(pin_vld & !ram_full)
+        pin_vld <= 1'b0;
+end
+
+assign wdata_mem = wdata_pipe;
+assign wea       = pin_vld && !ram_full;
+end
+else begin: no_wdata_pipe
+assign wdata_mem = wdata;
+assign wea       = w_en && !ram_full;
+end
+endgenerate
+
+//pipeline out
+generate if(DATA_PIPE_OUT || DATA_FWFT) begin: rd_fetch
+wire  prefetch;
+
+assign prefetch = ram_dv && ((!pfeth_vld) || (pfeth_vld & r_en));
+
+always @(posedge clk or negedge rst_n) begin
+    if(!rst_n)
+        ram_dv <= 1'b0;
+    else if(srst)
+        ram_dv <= 1'b0;
+    else if(reb)
+        ram_dv <= 1'b1;
+    else if(prefetch)
+        ram_dv <= 1'b0;
+end
+
+always @(posedge clk or negedge rst_n) begin
+    if(!rst_n)
+        rdata_fetch <= {(DATA_WIDTH){1'b0}};
+    else if(prefetch)
+        rdata_fetch <= rdata_mem;
+end
+
+always @(posedge clk or negedge rst_n) begin
+    if(!rst_n)
+        pfeth_vld <= 1'b0;
+    else if(srst)
+        pfeth_vld <= 1'b0;
+    else if(prefetch)
+        pfeth_vld <= 1'b1;
+    else if(pfeth_vld & r_en)
+        pfeth_vld <= 1'b0;
+end
+end
+endgenerate
+
+//output pipe
+generate if(DATA_PIPE_OUT) begin: rd_pipe
+
+always @(posedge clk or negedge rst_n) begin
+    if(!rst_n)
+        rdata_pipe <= {(DATA_WIDTH){1'b0}};
+    else if(pfeth_vld & r_en)
+        rdata_pipe <= rdata_fetch;
+end
+
+assign rdata = rdata_pipe;
+assign reb   = (!pfeth_vld || !ram_dv || (pfeth_vld & r_en)) && !ram_empty;
+
+end else if(DATA_FWFT) begin: rd_fwft
+
+assign rdata = rdata_fetch;
+assign reb   = (!pfeth_vld || !ram_dv || (pfeth_vld & r_en)) && !ram_empty;
+
+end else begin: no_rd_pipe
+
+assign rdata = rdata_mem;
+assign reb   = r_en && !ram_empty;
+
+end
+endgenerate
+
+//read point
+    always @(posedge clk or negedge rst_n) begin
+        if(!rst_n) 
+            rptr <= {(ADDR_WIDTH){1'b0}};
+        else if(srst)
+            rptr <= {(ADDR_WIDTH){1'b0}};
+        else if(reb && (rptr == DATA_DEPTH-1))
+            rptr <= {(ADDR_WIDTH){1'b0}};
+        else if(reb)
+            rptr <= rptr + 1'b1;
+    end
+
+//write point
+    always @(posedge clk or negedge rst_n) begin
+        if(!rst_n)
+            wptr <= {(ADDR_WIDTH){1'b0}};
+        else if(srst)
+            wptr <= {(ADDR_WIDTH){1'b0}};
+        else if(wea && (wptr == DATA_DEPTH-1))
+            wptr <= {(ADDR_WIDTH){1'b0}};
+        else if(wea)
+            wptr <= wptr + 1'b1;
+    end
+
+//fifo counter
+    always @(posedge clk or negedge rst_n) begin
+        if(!rst_n)
+            cnt <= {(WORD_CNT_WID){1'b0}};
+        else if(srst)
+            cnt <= {(WORD_CNT_WID){1'b0}};
+        else if(reb && wea)
+            cnt <= cnt;
+        else if(wea)
+            cnt <= cnt + 1'b1;
+        else if(reb)
+            cnt <= cnt - 1'b1;
+    end
+
+
+assign waddr      = wptr;
+assign raddr      = rptr;
+assign ram_full   = (cnt==DATA_DEPTH);
+assign ram_empty  = (cnt=={(ADDR_WIDTH){1'b0}});
+assign fifo_afull = (word_cnt>=afull_thrd);
+assign fifo_aempty= (word_cnt<=aempty_thrd);
+
+//fifo full
+generate if(DATA_PIPE_IN && (DATA_PIPE_OUT || DATA_FWFT)) begin: dual_pipe
+    assign fifo_full = ram_full  &  pin_vld;
+    assign fifo_empty= !pfeth_vld;
+    assign word_cnt  = cnt + pin_vld + ram_dv + pfeth_vld;
+end else if(DATA_PIPE_IN) begin: pipe_in
+    assign fifo_full = ram_full  &  pin_vld;
+    assign fifo_empty= ram_empty;
+    assign word_cnt  = cnt + pin_vld;
+end else if(DATA_PIPE_OUT || DATA_FWFT) begin:pipe_out
+    assign fifo_full = ram_full;
+    assign fifo_empty= !pfeth_vld;
+    assign word_cnt  = cnt + ram_dv + pfeth_vld;
+end else begin:no_pipe
+    assign fifo_full = ram_full;
+    assign fifo_empty= ram_empty;
+    assign word_cnt  = cnt;
+end
+endgenerate
+
+endmodule
