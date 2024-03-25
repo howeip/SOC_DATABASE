@@ -1,0 +1,55 @@
+module ss_rst_sequence (
+	input       clk_in,
+	input       por_sys_n,
+	input [2:0] sw_rst,
+	input       ss_pwr_rdy,
+	output      clk_gen_rst_n,
+	output      ss_rst_n
+	);
+
+parameter DELAY_2 = 1;
+
+wire por_sync_n;
+wire pwr_rdy_sync;
+wire [2:0] sw_rst_sync;
+reg  sync_rst;
+
+rstn_sync u_por_sync (
+	.sync_clock     (clk_in  ),
+	.rstn_n         (por_sys_n  ),
+	.async_rstn_n   (por_sync_n ),
+	.sync_rstn_n    (           )
+	);
+
+sync #(.D_WIDTH(1),.DATA_DEFAULT(1'b0), .DELAY_2(DELAY_2)) u_pwr_rdy_sync (
+	.clk_d(clk_in),
+	.rst_d_n(por_sync_n),
+	.data_s(ss_pwr_rdy),
+	.data_d(pwr_rdy_sync)
+	);
+
+sync #(.D_WIDTH(3),.DATA_DEFAULT(3'h0), .DELAY_2(DELAY_2)) u_sw_rst_sync (
+	.clk_d(clk_in),
+	.rst_d_n(por_sync_n),
+	.data_s(sw_rst),
+	.data_d(sw_rst_sync)
+	);
+
+always @ (posedge clk_in or negedge por_sync_n)
+begin
+	if (~por_sync_n)
+		sync_rst<=1'b1;
+	else if (|sw_rst_sync)
+		sync_rst<=1'b1;
+	else
+		sync_rst<=sync_rst&(~pwr_rdy_sync);
+end
+
+rst_cnt #(.CNT_WIDTH(5),.CNT_THRESH(5'h1F),.CNT_AL_THRESH(5'h0F))  u_rst_cnt (
+	.clk     (clk_in),
+	.rst_n   (por_sync_n),
+	.sync_rst(sync_rst),
+	.cnt_al_done(clk_gen_rst_n),
+	.cnt_done(ss_rst_n)
+	);
+endmodule
