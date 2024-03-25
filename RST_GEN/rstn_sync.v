@@ -1,23 +1,3 @@
-// +FHDR----------------------------------------------------------------------------
-// Copyright (c) 2022 Cygnusemi.
-// ALL RIGHTS RESERVED Worldwide
-//         
-// Author        : zhanglin
-// Email         : linn_zh@cygnusemi.com
-// Created On    : 2022/08/01 15:14
-// Last Modified : 2022/11/01 16:49
-// File Name     : rstn_sync.v
-// Description   : 
-// --rstn_sync module supports configurable parameters;
-//   Asynchronous reset, synchronous release;
-//   Synchronous reset;
-// ---------------------------------------------------------------------------------
-// Modification History:
-// Date         By              Version                 Change Description
-// ---------------------------------------------------------------------------------
-// 2022/08/01   zhanglin        1.0                     Original
-// -FHDR----------------------------------------------------------------------------
-
 module rstn_sync(
     input       sync_clock  ,
     input       rstn_n      ,
