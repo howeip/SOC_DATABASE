@@ -1,0 +1,93 @@
+// +FHDR----------------------------------------------------------------------------
+// Device        : asic
+// Author        : eric.wang
+// Email         : ericw@cygnusemi.com
+// Created On    : 2022/06/30 15:52
+// Last Modified : 2022/11/23 11:07
+// File Name     : tpram_regfile.v
+// Description   :
+//         
+// Copyright (c) 2022 Cygnusemi.
+// ALL RIGHTS RESERVED
+// 
+// ---------------------------------------------------------------------------------
+// Modification History:
+// Date         By              Version                 Change Description
+// ---------------------------------------------------------------------------------
+// 2022/06/30   eric.wang       1.0                     Original
+// -FHDR----------------------------------------------------------------------------
+
+module tpram_regfile #(
+    parameter WORD_DEPTH     = 8 ,
+    parameter DATA_WIDTH     = 16,
+    parameter MASK_BIT_WIDTH = 16 
+)
+(
+    clka,  //write
+    clkb,  //read
+    addr_a,//write
+    addr_b,//read
+    mea,
+    wea,
+    meb,
+    din,
+    mask,
+    dout
+);
+localparam ADDR_WIDTH = $clog2(WORD_DEPTH);
+localparam MASK_WIDTH = DATA_WIDTH/MASK_BIT_WIDTH;
+
+input clka;
+input clkb;
+input mea;
+input meb;
+input [ADDR_WIDTH-1:0] addr_a;
+input [ADDR_WIDTH-1:0] addr_b;
+input wea;
+input [DATA_WIDTH-1:0] din;
+input [MASK_WIDTH-1:0] mask;
+output reg [DATA_WIDTH-1:0] dout;
+
+reg [DATA_WIDTH-1 : 0] regfile [WORD_DEPTH-1 : 0];
+integer i;
+
+//function automatic integer clogb2(input integer a);
+//begin
+//    for(clogb2=0;a>0;clogb2=clogb2+1)
+//        a = a>>1;
+//end
+//endfunction
+
+    /*autodef*/
+    //Start of automatic define
+    //Start of automatic reg
+    //Define flip-flop registers here
+    //Define combination registers here
+    //End of automatic reg
+    //Start of automatic wire
+    //Define assign wires here
+    wire                        wr_a                            ;
+    wire                        rd_b                            ;
+    //Define instance wires here
+    //End of automatic wire
+    //End of automatic define
+
+assign wr_a = mea &  wea;
+assign rd_b = meb;
+
+
+always @(posedge clka) begin: tpram_regfile
+    if(wr_a) begin
+        for(i=0;i<MASK_WIDTH;i=i+1)
+            if(mask[i])
+                regfile[addr_a][i*MASK_BIT_WIDTH +: MASK_BIT_WIDTH] <= din[i*MASK_BIT_WIDTH +: MASK_BIT_WIDTH];
+    end
+end
+
+
+always @(posedge clkb) begin:dpram_outb
+    if(rd_b)
+        dout <= regfile[addr_b];
+end
+
+endmodule
