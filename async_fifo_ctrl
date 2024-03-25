@@ -1,0 +1,470 @@
+// +FHDR----------------------------------------------------------------------------
+// Copyright (c) 2022 Cygnusemi.
+// ALL RIGHTS RESERVED Worldwide
+//         
+// Author        : ericw
+// Email         : ericw@cygnusemi.com
+// Created On    : 2022/08/01 11:24
+// Last Modified : 2023/08/26 10:59
+// File Name     : async_fifo.v
+// Description   :
+// 
+// ---------------------------------------------------------------------------------
+// Modification History:
+// Date         By              Version                 Change Description
+// ---------------------------------------------------------------------------------
+// 2022/08/01   wangyi          1.0                     Original
+// -FHDR----------------------------------------------------------------------------
+
+module async_fifo_ctrl #(
+    parameter DATA_WIDTH   = 32                   ,
+    parameter DATA_DEPTH   = 16                   ,
+    parameter GRAY_SYNC_S  = 2                    ,   
+    parameter DATA_PIPE_IN = 0                    ,
+    parameter DATA_PIPE_OUT= 0                    ,
+    parameter DATA_FWFT    = 0                    ,
+    parameter ASYNC_RST_CTL= 0                    ,
+    parameter ADDR_WIDTH   = $clog2(DATA_DEPTH)
+)
+(
+    input                      r_clk      ,
+    input                      w_clk      ,
+    input                      r_rst_n    ,   //async reset
+    input                      r_srst     ,   //sync clear
+    input                      w_rst_n    ,   //async reset
+    input                      w_srst     ,   //sync clear
+    input                      r_en       ,
+    input                      w_en       ,
+    input  [ADDR_WIDTH    :0]  afull_thrd ,
+    input  [ADDR_WIDTH    :0]  aempty_thrd,
+    input  [DATA_WIDTH-1  :0]  wdata      ,
+    output [DATA_WIDTH-1  :0]  rdata      ,
+    output                     ram_full   ,
+    output                     ram_empty  ,
+    output                     fifo_full      ,
+    output                     fifo_afull     ,
+    output                     fifo_empty     ,
+    output                     fifo_aempty    ,
+    output reg [ADDR_WIDTH:0]  word_cnt_w     ,
+    output reg [ADDR_WIDTH:0]  word_cnt_r     ,
+    output                     w_reset_active ,  //async
+    output                     r_reset_active ,  //async
+
+    //tpsram/regfile read/write 
+    output [ADDR_WIDTH-1  :0]  waddr      ,
+    output [ADDR_WIDTH-1  :0]  raddr      ,
+    output [DATA_WIDTH-1  :0]  wdata_mem  ,
+    output                     wea        ,
+    output                     reb        ,
+    input  [DATA_WIDTH-1  :0]  rdata_mem 
+);
+    
+localparam GRAY_DEC = ((1<<ADDR_WIDTH) - DATA_DEPTH)/2;
+localparam MEM_DEPTH = DATA_DEPTH + (DATA_DEPTH%2);
+
+reg [ADDR_WIDTH : 0]   wptr ;
+reg [ADDR_WIDTH : 0]   rptr ;
+reg [ADDR_WIDTH : 0]   wptr_gray;
+reg [ADDR_WIDTH : 0]   rptr_gray;
+
+wire [ADDR_WIDTH:0]    wptr_nxt;  
+wire [ADDR_WIDTH:0]    rptr_nxt;
+wire [ADDR_WIDTH:0]    wptr_bin_sync;  
+wire [ADDR_WIDTH:0]    rptr_bin_sync;  
+
+wire [ADDR_WIDTH: 0]   wptr_gray_sync;  
+reg [ADDR_WIDTH : 0]   afifo_wptr_gray_sync1;
+reg [ADDR_WIDTH : 0]   afifo_wptr_gray_sync2;
+reg [ADDR_WIDTH : 0]   afifo_wptr_gray_sync3;
+wire [ADDR_WIDTH: 0]   rptr_gray_sync;
+reg [ADDR_WIDTH : 0]   afifo_rptr_gray_sync1;
+reg [ADDR_WIDTH : 0]   afifo_rptr_gray_sync2;
+reg [ADDR_WIDTH : 0]   afifo_rptr_gray_sync3;
+
+wire                   w_rstn_ext_src;
+wire                   w_rstn_ext_dst;
+wire                   w_rstn_ext;
+wire                   w_rstn_inter;
+wire                   r_rstn_ext_src;
+wire                   r_rstn_ext_dst;
+wire                   r_rstn_ext;
+wire                   r_rstn_inter;
+
+reg [ADDR_WIDTH :0]    data_cnt_r;
+reg [ADDR_WIDTH :0]    data_cnt_w;
+
+reg                    pin_vld;
+reg                    afifo_pin_vld_sync1;
+reg                    afifo_pin_vld_sync2;
+reg                    pfeth_vld;
+reg                    afifo_pfeth_vld_sync1;
+reg                    afifo_pfeth_vld_sync2;
+reg                    ram_dv;
+reg                    afifo_ram_dv_sync1;
+reg                    afifo_ram_dv_sync2;
+reg [DATA_WIDTH-1  :0] rdata_fetch;
+reg [DATA_WIDTH-1  :0] rdata_pipe;
+wire [1            :0] pfeth_num_r;
+wire [1            :0] pfeth_num_w;
+
+
+assign waddr = wptr[ADDR_WIDTH-1 : 0];
+assign raddr = rptr[ADDR_WIDTH-1 : 0];
+
+function automatic [ADDR_WIDTH : 0] async_bin2gray;
+    input [ADDR_WIDTH : 0] fifo_ptr;
+       async_bin2gray = ((fifo_ptr >>1) ^ fifo_ptr);
+endfunction
+
+assign wptr_nxt = (wptr[ADDR_WIDTH-1:0] == (MEM_DEPTH-1)) ? ({!wptr[ADDR_WIDTH],{(ADDR_WIDTH){1'b0}}}) : (wptr + 1'b1);
+assign rptr_nxt = (rptr[ADDR_WIDTH-1:0] == (MEM_DEPTH-1)) ? ({!rptr[ADDR_WIDTH],{(ADDR_WIDTH){1'b0}}}) : (rptr + 1'b1);
+
+//pipelien in 
+generate if(DATA_PIPE_IN) begin: wdata_pipe
+reg [DATA_WIDTH-1  :0] wdata_pipe;
+
+always @(posedge w_clk or negedge w_rstn_inter) begin
+    if(!w_rstn_inter)
+        wdata_pipe <= {(DATA_WIDTH){1'b0}};
+    else if(w_en & (!pin_vld || wea))
+        wdata_pipe <= wdata;
+end
+
+always @(posedge w_clk or negedge w_rstn_inter) begin
+    if(!w_rstn_inter)
+        pin_vld <= 1'b0;
+    else if(w_srst)
+        pin_vld <= 1'b0;
+    else if(w_en & (!pin_vld || wea))
+        pin_vld <= 1'b1;
+    else if(pin_vld & !ram_full)
+        pin_vld <= 1'b0;
+end
+
+always @(posedge r_clk or negedge r_rstn_inter) begin
+    if(!r_rstn_inter) begin
+        afifo_pin_vld_sync1 <= 1'b0;
+        afifo_pin_vld_sync2 <= 1'b0;
+    end
+    else if(r_srst) begin
+        afifo_pin_vld_sync1 <= 1'b0;
+        afifo_pin_vld_sync2 <= 1'b0;
+    end else begin
+        afifo_pin_vld_sync1 <= pin_vld;
+        afifo_pin_vld_sync2 <= afifo_pin_vld_sync1;
+    end
+end
+
+assign wdata_mem = wdata_pipe;
+assign wea       = pin_vld && !ram_full;
+end
+else begin: no_wdata_pipe
+assign wdata_mem = wdata;
+assign wea       = w_en && !ram_full;
+end
+endgenerate
+
+//pipeline out
+generate if(DATA_PIPE_OUT || DATA_FWFT) begin: rd_fetch
+wire  prefetch;
+
+assign prefetch = ram_dv && ((!pfeth_vld) || (pfeth_vld & r_en));
+
+always @(posedge r_clk or negedge r_rstn_inter) begin
+    if(!r_rstn_inter)
+        ram_dv <= 1'b0;
+    else if(r_srst) 
+        ram_dv <= 1'b0;
+    else if(reb)
+        ram_dv <= 1'b1;
+    else if(prefetch)
+        ram_dv <= 1'b0;
+end
+
+always @(posedge r_clk or negedge r_rstn_inter) begin
+    if(!r_rstn_inter)
+        rdata_fetch <= {(DATA_WIDTH){1'b0}};
+    else if(prefetch)
+        rdata_fetch <= rdata_mem;
+end
+
+always @(posedge r_clk or negedge r_rstn_inter) begin
+    if(!r_rstn_inter)
+        pfeth_vld <= 1'b0;
+    else if(r_srst)
+        pfeth_vld <= 1'b0;
+    else if(prefetch)
+        pfeth_vld <= 1'b1;
+    else if(pfeth_vld & r_en)
+        pfeth_vld <= 1'b0;
+end
+
+always @(posedge w_clk or negedge w_rstn_inter) begin
+    if(!w_rstn_inter) begin
+        afifo_ram_dv_sync1 <= 1'b0;
+        afifo_ram_dv_sync2 <= 1'b0;
+        afifo_pfeth_vld_sync1 <= 1'b0;
+        afifo_pfeth_vld_sync2 <= 1'b0;
+    end else if(w_srst) begin
+        afifo_ram_dv_sync1 <= 1'b0;
+        afifo_ram_dv_sync2 <= 1'b0;
+        afifo_pfeth_vld_sync1 <= 1'b0;
+        afifo_pfeth_vld_sync2 <= 1'b0;
+    end else begin
+        afifo_ram_dv_sync1 <= ram_dv;
+        afifo_ram_dv_sync2 <= afifo_ram_dv_sync1;
+        afifo_pfeth_vld_sync1 <= pfeth_vld;
+        afifo_pfeth_vld_sync2 <= afifo_pfeth_vld_sync1;
+    end
+end
+
+end
+endgenerate
+
+//output pipe
+generate if(DATA_PIPE_OUT) begin: rd_pipe
+
+always @(posedge r_clk or negedge r_rstn_inter) begin
+    if(!r_rstn_inter)
+        rdata_pipe <= {(DATA_WIDTH){1'b0}};
+    else if(pfeth_vld & r_en)
+        rdata_pipe <= rdata_fetch;
+end
+assign rdata = rdata_pipe;
+assign reb   = (!pfeth_vld || !ram_dv || (pfeth_vld & r_en)) && !ram_empty;
+
+end else if(DATA_FWFT) begin: rd_fwft
+
+assign rdata = rdata_fetch;
+assign reb   = (!pfeth_vld || !ram_dv || (pfeth_vld & r_en)) && !ram_empty;
+
+end else begin: no_rd_pipe
+
+assign rdata = rdata_mem;
+assign reb   = r_en && !ram_empty;
+
+end
+endgenerate
+
+//cal pipe data num for rd/wr data counter
+generate if((DATA_PIPE_OUT || DATA_FWFT) && DATA_PIPE_IN) begin: rd_wr_pipe_num
+    assign pfeth_num_r = ram_dv +  pfeth_vld + afifo_pin_vld_sync2;
+    assign pfeth_num_w = afifo_ram_dv_sync2 + afifo_pfeth_vld_sync2 + pin_vld;
+end else if(DATA_PIPE_OUT || DATA_FWFT) begin : rd_pipe_num
+    assign pfeth_num_r = ram_dv +  pfeth_vld;
+    assign pfeth_num_w = afifo_ram_dv_sync2 + afifo_pfeth_vld_sync2;
+end else if(DATA_PIPE_IN) begin : wr_pipe_num
+    assign pfeth_num_r = afifo_pin_vld_sync2;
+    assign pfeth_num_w = pin_vld;
+end else begin : no_pfetch_num
+    assign pfeth_num_r = 2'b00;
+    assign pfeth_num_w = 2'b00;
+end
+endgenerate
+
+//read point 
+always @(posedge r_clk or negedge r_rstn_inter) begin
+    if(!r_rstn_inter)
+        rptr <= {(ADDR_WIDTH+1){1'b0}};
+    else if(r_srst)
+        rptr <= {(ADDR_WIDTH+1){1'b0}};
+    else if(reb)
+        rptr <= rptr_nxt;
+end
+
+//write point 
+always @(posedge w_clk or negedge w_rstn_inter) begin
+    if(!w_rstn_inter)
+        wptr <= {(ADDR_WIDTH+1){1'b0}};
+    else if(w_srst)
+        wptr <= {(ADDR_WIDTH+1){1'b0}};
+    else if(wea)
+        wptr <= wptr_nxt;
+end
+
+//read gray 
+always @(posedge r_clk or negedge r_rstn_inter) begin
+    if(!r_rstn_inter)
+        rptr_gray <= async_bin2gray(GRAY_DEC);
+    else if(r_srst)
+        rptr_gray <= async_bin2gray(GRAY_DEC);
+    else if(reb)
+        rptr_gray <= async_bin2gray(rptr_nxt + GRAY_DEC);
+end
+
+//write gray 
+always @(posedge w_clk or negedge w_rstn_inter) begin
+    if(!w_rstn_inter)
+        wptr_gray <= async_bin2gray(GRAY_DEC);
+    else if(w_srst)
+        wptr_gray <= async_bin2gray(GRAY_DEC);
+    else if(wea)
+        wptr_gray <= async_bin2gray(wptr_nxt + GRAY_DEC);
+end
+
+//gray sync
+always @(posedge w_clk or negedge w_rstn_inter) begin
+    if(!w_rstn_inter) begin
+        afifo_rptr_gray_sync1 <= async_bin2gray(GRAY_DEC);
+        afifo_rptr_gray_sync2 <= async_bin2gray(GRAY_DEC);
+        afifo_rptr_gray_sync3 <= async_bin2gray(GRAY_DEC);
+    end
+    else if(w_srst) begin
+        afifo_rptr_gray_sync1 <= async_bin2gray(GRAY_DEC);
+        afifo_rptr_gray_sync2 <= async_bin2gray(GRAY_DEC);
+        afifo_rptr_gray_sync3 <= async_bin2gray(GRAY_DEC);
+    end else begin
+        afifo_rptr_gray_sync1 <= rptr_gray;
+        afifo_rptr_gray_sync2 <= afifo_rptr_gray_sync1;
+        afifo_rptr_gray_sync3 <= afifo_rptr_gray_sync2;
+    end
+end 
+
+always @(posedge r_clk or negedge r_rstn_inter) begin
+    if(!r_rstn_inter) begin
+        afifo_wptr_gray_sync1 <= async_bin2gray(GRAY_DEC);
+        afifo_wptr_gray_sync2 <= async_bin2gray(GRAY_DEC);
+        afifo_wptr_gray_sync3 <= async_bin2gray(GRAY_DEC);
+    end
+    else if(r_srst) begin
+        afifo_wptr_gray_sync1 <= async_bin2gray(GRAY_DEC);
+        afifo_wptr_gray_sync2 <= async_bin2gray(GRAY_DEC);
+        afifo_wptr_gray_sync3 <= async_bin2gray(GRAY_DEC);
+    end else begin
+        afifo_wptr_gray_sync1 <= wptr_gray;
+        afifo_wptr_gray_sync2 <= afifo_wptr_gray_sync1;
+        afifo_wptr_gray_sync3 <= afifo_wptr_gray_sync2;
+    end
+end
+
+generate if(GRAY_SYNC_S==2) begin: sync_2s
+    assign rptr_gray_sync = afifo_rptr_gray_sync2;
+    assign wptr_gray_sync = afifo_wptr_gray_sync2;
+end
+else begin: sync_3s
+    assign rptr_gray_sync = afifo_rptr_gray_sync3;
+    assign wptr_gray_sync = afifo_wptr_gray_sync3;
+end
+endgenerate
+
+
+//-----------fifo full & empty---------------------------------
+generate if(DATA_PIPE_IN && (DATA_PIPE_OUT || DATA_FWFT)) begin: dual_pipe
+    assign fifo_full = (ram_full  &  pin_vld);
+    assign fifo_empty= !pfeth_vld;
+end else if(DATA_PIPE_IN) begin: pipe_in
+    assign fifo_full = (ram_full  &  pin_vld);
+    assign fifo_empty= ram_empty;
+end else if(DATA_PIPE_OUT || DATA_FWFT) begin:pipe_out
+    assign fifo_full = ram_full;
+    assign fifo_empty= !pfeth_vld;
+end else begin:no_pipe
+    assign fifo_full = ram_full;
+    assign fifo_empty= ram_empty;
+end
+endgenerate
+
+//------------ram full--------------------------------
+assign ram_full  = (rptr_gray_sync == {~wptr_gray[ADDR_WIDTH:ADDR_WIDTH-1],wptr_gray[ADDR_WIDTH-2:0]});
+assign ram_empty = (rptr_gray == wptr_gray_sync);
+
+//-----------almost full/empty------------------------
+assign wptr_bin_sync[ADDR_WIDTH]     = wptr_gray_sync[ADDR_WIDTH];
+assign wptr_bin_sync[ADDR_WIDTH-1:0] = wptr_bin_sync[ADDR_WIDTH:1] ^ wptr_gray_sync[ADDR_WIDTH-1:0];
+
+assign rptr_bin_sync[ADDR_WIDTH]     = rptr_gray_sync[ADDR_WIDTH];
+assign rptr_bin_sync[ADDR_WIDTH-1:0] = rptr_bin_sync[ADDR_WIDTH:1] ^ rptr_gray_sync[ADDR_WIDTH-1:0];
+
+//src word cnt
+always @(*) begin
+    if(wptr[ADDR_WIDTH] != rptr_bin_sync[ADDR_WIDTH])
+        data_cnt_w = wptr[ADDR_WIDTH-1:0] - rptr_bin_sync[ADDR_WIDTH-1:0] + GRAY_DEC + MEM_DEPTH + pfeth_num_w;
+    else
+        data_cnt_w = wptr[ADDR_WIDTH-1:0] - rptr_bin_sync[ADDR_WIDTH-1:0] + GRAY_DEC + pfeth_num_w;
+end
+
+always @(posedge w_clk or negedge w_rstn_inter) begin
+    if(!w_rstn_inter)
+        word_cnt_w <= {(ADDR_WIDTH+1'b1){1'b0}};
+    else if(w_srst)
+        word_cnt_w <= {(ADDR_WIDTH+1'b1){1'b0}};
+    else if(fifo_full)
+        word_cnt_w <= MEM_DEPTH + pfeth_num_w;
+    else 
+        word_cnt_w <= data_cnt_w;
+end
+
+//dst word cnt
+always @(*) begin
+    if(wptr_bin_sync[ADDR_WIDTH] != rptr[ADDR_WIDTH])
+        data_cnt_r = wptr_bin_sync[ADDR_WIDTH-1:0] - rptr[ADDR_WIDTH-1:0] - GRAY_DEC + MEM_DEPTH + pfeth_num_r;
+    else
+        data_cnt_r = wptr_bin_sync[ADDR_WIDTH-1:0] - rptr[ADDR_WIDTH-1:0] - GRAY_DEC + pfeth_num_r;
+end
+
+always @(posedge r_clk or negedge r_rstn_inter) begin
+    if(!r_rstn_inter) 
+        word_cnt_r <= {(ADDR_WIDTH+1'b1){1'b0}};
+    else if(r_srst)
+        word_cnt_r <= {(ADDR_WIDTH+1'b1){1'b0}};
+    else if(fifo_empty)
+        word_cnt_r <= {(ADDR_WIDTH+1'b1){1'b0}};
+    else if(&data_cnt_r)
+        word_cnt_r <= {(ADDR_WIDTH+1'b1){1'b0}};
+    else 
+        word_cnt_r <= data_cnt_r;
+end
+
+assign fifo_afull  = (word_cnt_w >= afull_thrd)  ;
+assign fifo_aempty = (word_cnt_r <= aempty_thrd) ;
+
+//async reset sync
+generate if(ASYNC_RST_CTL==1) begin: async_rst_ctl
+rstn_sync #(.WIDTH(GRAY_SYNC_S+2)) 
+u_rstn_sync_src0 (
+    .sync_clock  (w_clk         ),
+    .rstn_n      (w_rst_n       ),
+    .async_rstn_n(w_rstn_ext_src),
+    .sync_rstn_n ()
+);
+
+rstn_sync #(.WIDTH(GRAY_SYNC_S+2)) 
+u_rstn_sync_src1 (
+    .sync_clock  (w_clk         ),
+    .rstn_n      (r_rst_n       ),
+    .async_rstn_n(w_rstn_ext_dst),
+    .sync_rstn_n ()
+);
+
+rstn_sync #(.WIDTH(GRAY_SYNC_S+2)) 
+u_rstn_sync_dst0 (
+    .sync_clock  (r_clk         ),
+    .rstn_n      (w_rst_n       ),
+    .async_rstn_n(r_rstn_ext_src),
+    .sync_rstn_n ()
+);
+
+rstn_sync #(.WIDTH(GRAY_SYNC_S+2)) 
+u_rstn_sync_dst1 (
+    .sync_clock  (r_clk         ),
+    .rstn_n      (r_rst_n       ),
+    .async_rstn_n(r_rstn_ext_dst),
+    .sync_rstn_n ()
+);
+
+assign w_rstn_ext = w_rstn_ext_src & w_rstn_ext_dst;
+assign r_rstn_ext = r_rstn_ext_src & r_rstn_ext_dst;
+assign w_rstn_inter   = w_rstn_ext;
+assign r_rstn_inter   = r_rstn_ext;
+assign w_reset_active = !w_rstn_inter;
+assign r_reset_active = !r_rstn_inter;
+end
+else begin:no_async_rst_ctl
+assign w_rstn_inter = w_rst_n;
+assign r_rstn_inter = r_rst_n;
+assign w_reset_active = 1'b0;
+assign r_reset_active = 1'b0;
+end
+endgenerate
+
+endmodule
