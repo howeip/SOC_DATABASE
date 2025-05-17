@@ -1,0 +1,1623 @@
+########## General Commands ##########
+upf_version 2.1
+
+set script_path [file normalize [info script]]
+set script_dir  [file dirname $script_path]
+puts $script_dir
+set SOC_HDN_UPF  $script_dir/blocks
+source $script_dir/soc_top_upf_cfg.tcl
+
+#set SOC_HDN_UPF  /project/mei/ME_BE_handoff/xstar/95p/soc_top/XSTARV1R1_MPW1_95P_FC_R004_SOC/flat_upf/blocks
+#source /project/mei/ME_BE_handoff/xstar/95p/soc_top/XSTARV1R1_MPW1_95P_FC_R004_SOC/flat_upf/soc_top_upf_cfg.tcl
+
+#-------------------------------------------------------------------------------
+# global parameter set 
+#-------------------------------------------------------------------------------
+
+set_design_top xstar_asic_top
+
+set HIER_CPUSS             u_cpuss_top_sv/u_cpuss_top
+set HIER_DSPSS             u_dspss_top_sv/u_dspss_top
+set HIER_AOSS              u_ao_top_sv/u_ao_top
+set HIER_BB_TOP            u_bb_phy_top_sv/u_bb_phy_top
+set HIER_DDRSS             u_ddrss_top_sv/u_ddr_top/u_inno_ctrl_phy_top
+
+set HIER_CPUSS_Parent      u_cpuss_top_sv
+set HIER_DSPSS_Parent      u_dspss_top_sv
+set HIER_AOSS_Parent       u_ao_top_sv
+set HIER_BBPHY_Parent      u_bb_phy_top_sv
+set HIER_DDRSS_Parent      u_ddrss_top_sv
+
+set SDIO_SYNC "u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_sync_wrapper/u_smid_sync"
+set SDIO_CSM  "u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csm_wrapper/u_smid_i_csm"
+set SDIO_CSR  "u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_wrapper/u_smid_csr"
+
+
+set SOC_DIC_HIER [dict create \
+cpuss $HIER_CPUSS \
+dspss $HIER_DSPSS \
+bbphy $HIER_BB_TOP \
+aoss  $HIER_AOSS \
+ddrss $HIER_DDRSS \
+]
+
+#-------------------------------------------------------------------------------
+# Supply Nets, Ports and Sets
+#-------------------------------------------------------------------------------
+create_supply_port  VDD_MAIN         -direction       inout
+create_supply_net   VDD_MAIN
+connect_supply_net  VDD_MAIN         -ports           VDD_MAIN
+
+create_supply_port  VDD_MDM          -direction       inout
+create_supply_net   VDD_MDM
+connect_supply_net  VDD_MDM          -ports           VDD_MDM
+
+create_supply_port  VDD_DSP          -direction       inout
+create_supply_net   VDD_DSP
+connect_supply_net  VDD_DSP          -ports           VDD_DSP
+
+create_supply_port  USB_VDDA         -direction       inout
+create_supply_net   USB_VDDA
+connect_supply_net  USB_VDDA         -ports           USB_VDDA
+
+create_supply_port  VDD_AO           -direction       inout
+create_supply_net   VDD_AO
+connect_supply_net  VDD_AO           -ports           VDD_AO
+
+create_supply_port  VSS              -direction       inout
+create_supply_net   VSS              -resolve         parallel
+connect_supply_net  VSS              -ports           VSS
+
+#-------------------------------------------------------------------------------
+# Supply Nets, Ports and Sets
+#-------------------------------------------------------------------------------
+
+# afe pll power pin
+create_supply_net   AFE_AVDD12_PLL_VCO
+create_supply_port  AFE_AVDD12_PLL_VCO  -direction  in
+connect_supply_net  AFE_AVDD12_PLL_VCO  -ports      AFE_AVDD12_PLL_VCO
+
+create_supply_net   AFE_AVSS_PLL_VCO
+create_supply_port  AFE_AVSS_PLL_VCO    -direction  in
+connect_supply_net  AFE_AVSS_PLL_VCO    -ports      AFE_AVSS_PLL_VCO
+
+create_supply_net   AFE_AVDD09_PLL_MMD
+create_supply_port  AFE_AVDD09_PLL_MMD  -direction  in
+connect_supply_net  AFE_AVDD09_PLL_MMD  -ports      AFE_AVDD09_PLL_MMD
+
+create_supply_net   AFE_AVSS_PLL_MMD
+create_supply_port  AFE_AVSS_PLL_MMD    -direction  in
+connect_supply_net  AFE_AVSS_PLL_MMD    -ports      AFE_AVSS_PLL_MMD
+
+create_supply_net   AFE_AVDD09_PLL_CP
+create_supply_port  AFE_AVDD09_PLL_CP   -direction  in
+connect_supply_net  AFE_AVDD09_PLL_CP   -ports      AFE_AVDD09_PLL_CP
+
+create_supply_net   AFE_AVSS_PLL_CP
+create_supply_port  AFE_AVSS_PLL_CP     -direction  in
+connect_supply_net  AFE_AVSS_PLL_CP     -ports      AFE_AVSS_PLL_CP
+
+
+# afe prxadc power pin
+create_supply_net   AFE_AVDD12_PRXADC
+create_supply_port  AFE_AVDD12_PRXADC   -direction  in
+connect_supply_net  AFE_AVDD12_PRXADC   -ports      AFE_AVDD12_PRXADC
+
+create_supply_net   AFE_DVDD09_PRXADC
+create_supply_port  AFE_DVDD09_PRXADC   -direction  in
+connect_supply_net  AFE_DVDD09_PRXADC   -ports      AFE_DVDD09_PRXADC
+
+create_supply_net   AFE_AVSS_PRXADC
+create_supply_port  AFE_AVSS_PRXADC     -direction  in
+connect_supply_net  AFE_AVSS_PRXADC     -ports      AFE_AVSS_PRXADC
+
+create_supply_net   AFE_DVSS_PRXADC
+create_supply_port  AFE_DVSS_PRXADC     -direction  in
+connect_supply_net  AFE_DVSS_PRXADC     -ports      AFE_DVSS_PRXADC
+
+
+# afe drxadc power pin
+create_supply_net   AFE_AVDD12_DRXADC
+create_supply_port  AFE_AVDD12_DRXADC   -direction  in
+connect_supply_net  AFE_AVDD12_DRXADC   -ports      AFE_AVDD12_DRXADC
+
+create_supply_net   AFE_DVDD09_DRXADC
+create_supply_port  AFE_DVDD09_DRXADC   -direction  in
+connect_supply_net  AFE_DVDD09_DRXADC   -ports      AFE_DVDD09_DRXADC
+
+create_supply_net   AFE_AVSS_DRXADC
+create_supply_port  AFE_AVSS_DRXADC     -direction  in
+connect_supply_net  AFE_AVSS_DRXADC     -ports      AFE_AVSS_DRXADC
+
+create_supply_net   AFE_DVSS_DRXADC
+create_supply_port  AFE_DVSS_DRXADC     -direction  in
+connect_supply_net  AFE_DVSS_DRXADC     -ports      AFE_DVSS_DRXADC
+
+
+# afe orxadc power pin
+create_supply_net   AFE_AVDD12_ORXADC
+create_supply_port  AFE_AVDD12_ORXADC   -direction  in
+connect_supply_net  AFE_AVDD12_ORXADC   -ports      AFE_AVDD12_ORXADC
+
+create_supply_net   AFE_DVDD09_ORXADC
+create_supply_port  AFE_DVDD09_ORXADC   -direction  in
+connect_supply_net  AFE_DVDD09_ORXADC   -ports      AFE_DVDD09_ORXADC
+
+create_supply_net   AFE_AVSS_ORXADC
+create_supply_port  AFE_AVSS_ORXADC     -direction  in
+connect_supply_net  AFE_AVSS_ORXADC     -ports      AFE_AVSS_ORXADC
+
+create_supply_net   AFE_DVSS_ORXADC
+create_supply_port  AFE_DVSS_ORXADC     -direction  in
+connect_supply_net  AFE_DVSS_ORXADC     -ports      AFE_DVSS_ORXADC
+
+create_supply_net   AFE_AVDD18_TXDAC1
+create_supply_port  AFE_AVDD18_TXDAC1   -direction  in
+connect_supply_net  AFE_AVDD18_TXDAC1   -ports      AFE_AVDD18_TXDAC1
+
+
+# afe txdac1 power pin
+create_supply_net   AFE_AVDD12_TXDAC1
+create_supply_port  AFE_AVDD12_TXDAC1   -direction  in
+connect_supply_net  AFE_AVDD12_TXDAC1   -ports      AFE_AVDD12_TXDAC1
+
+create_supply_net   AFE_DVDD09_TXDAC1
+create_supply_port  AFE_DVDD09_TXDAC1   -direction  in
+connect_supply_net  AFE_DVDD09_TXDAC1   -ports      AFE_DVDD09_TXDAC1
+
+create_supply_net   AFE_AVSS_TXDAC1
+create_supply_port  AFE_AVSS_TXDAC1     -direction  in
+connect_supply_net  AFE_AVSS_TXDAC1     -ports      AFE_AVSS_TXDAC1
+
+create_supply_net   AFE_DVSS_TXDAC1
+create_supply_port  AFE_DVSS_TXDAC1     -direction  in
+connect_supply_net  AFE_DVSS_TXDAC1     -ports      AFE_DVSS_TXDAC1
+
+
+# afe txdac2 power pin
+create_supply_net   AFE_AVDD18_TXDAC2
+create_supply_port  AFE_AVDD18_TXDAC2   -direction  in
+connect_supply_net  AFE_AVDD18_TXDAC2   -ports      AFE_AVDD18_TXDAC2
+
+create_supply_net   AFE_AVDD12_TXDAC2
+create_supply_port  AFE_AVDD12_TXDAC2   -direction  in
+connect_supply_net  AFE_AVDD12_TXDAC2   -ports      AFE_AVDD12_TXDAC2
+
+create_supply_net   AFE_DVDD09_TXDAC2
+create_supply_port  AFE_DVDD09_TXDAC2   -direction  in
+connect_supply_net  AFE_DVDD09_TXDAC2   -ports      AFE_DVDD09_TXDAC2
+
+create_supply_net   AFE_AVSS_TXDAC2
+create_supply_port  AFE_AVSS_TXDAC2 -direction  in
+connect_supply_net  AFE_AVSS_TXDAC2 -ports      AFE_AVSS_TXDAC2
+
+create_supply_net   AFE_DVSS_TXDAC2
+create_supply_port  AFE_DVSS_TXDAC2 -direction  in
+connect_supply_net  AFE_DVSS_TXDAC2 -ports      AFE_DVSS_TXDAC2
+
+
+# afe auxdac power pin
+create_supply_net   AFE_AVDD18_AUXDAC
+create_supply_port  AFE_AVDD18_AUXDAC   -direction  in
+connect_supply_net  AFE_AVDD18_AUXDAC   -ports      AFE_AVDD18_AUXDAC
+
+create_supply_net   AFE_AVSS_18AUXDAC
+create_supply_port  AFE_AVSS_18AUXDAC   -direction  in
+connect_supply_net  AFE_AVSS_18AUXDAC   -ports      AFE_AVSS_18AUXDAC
+
+
+
+# afe pmu power pin
+create_supply_net   AFE_AVDD18_PMU
+create_supply_port  AFE_AVDD18_PMU      -direction  in
+connect_supply_net  AFE_AVDD18_PMU      -ports      AFE_AVDD18_PMU
+
+create_supply_net   AFE_AVSS_PMU
+create_supply_port  AFE_AVSS_PMU        -direction  in
+connect_supply_net  AFE_AVSS_PMU        -ports      AFE_AVSS_PMU
+
+
+# afe ckbuf power pin
+create_supply_net   AFE_AVDD09_CKBUF
+create_supply_port  AFE_AVDD09_CKBUF    -direction  in
+connect_supply_net  AFE_AVDD09_CKBUF    -ports      AFE_AVDD09_CKBUF
+
+create_supply_net   AFE_AVSS_CKBUF
+create_supply_port  AFE_AVSS_CKBUF      -direction  in
+connect_supply_net  AFE_AVSS_CKBUF      -ports      AFE_AVSS_CKBUF
+
+create_supply_set   SS_AFE_AVDD12_PLL_VCO \
+-function       {   power   AFE_AVDD12_PLL_VCO  } \
+-function       {   ground  AFE_AVSS_PLL_VCO    }
+
+create_supply_set   SS_AFE_AVDD09_PLL_MMD \
+-function       {   power   AFE_AVDD09_PLL_MMD  } \
+-function       {   ground  AFE_AVSS_PLL_MMD    }
+
+create_supply_set   SS_AFE_AVDD09_PLL_CP \
+-function       {   power   AFE_AVDD09_PLL_CP   } \
+-function       {   ground  AFE_AVSS_PLL_CP     }
+
+create_supply_set   SS_AFE_AVDD12_PRXADC \
+-function       {   power   AFE_AVDD12_PRXADC   } \
+-function       {   ground  AFE_AVSS_PRXADC     }
+
+create_supply_set   SS_AFE_DVDD09_PRXADC \
+-function       {   power   AFE_DVDD09_PRXADC   } \
+-function       {   ground  AFE_DVSS_PRXADC     }
+
+create_supply_set   SS_AFE_AVDD12_DRXADC \
+-function       {   power   AFE_AVDD12_DRXADC   } \
+-function       {   ground  AFE_AVSS_DRXADC     }
+
+create_supply_set   SS_AFE_DVDD09_DRXADC \
+-function       {   power   AFE_DVDD09_DRXADC   } \
+-function       {   ground  AFE_DVSS_DRXADC     }
+
+create_supply_set   SS_AFE_AVDD12_ORXADC \
+-function       {   power   AFE_AVDD12_ORXADC   } \
+-function       {   ground  AFE_AVSS_ORXADC     }
+
+create_supply_set   SS_AFE_DVDD09_ORXADC \
+-function       {   power   AFE_DVDD09_ORXADC   } \
+-function       {   ground  AFE_DVSS_ORXADC     }
+
+create_supply_set   SS_AFE_AVDD18_TXDAC1 \
+-function       {   power   AFE_AVDD18_TXDAC1   } \
+-function       {   ground  AFE_AVSS_TXDAC1     }
+
+create_supply_set   SS_AFE_AVDD12_TXDAC1 \
+-function       {   power   AFE_AVDD12_TXDAC1   } \
+-function       {   ground  AFE_AVSS_TXDAC1     }
+
+create_supply_set   SS_AFE_DVDD09_TXDAC1 \
+-function       {   power   AFE_DVDD09_TXDAC1   } \
+-function       {   ground  AFE_DVSS_TXDAC1     }
+
+create_supply_set   SS_AFE_AVDD18_TXDAC2 \
+-function       {   power   AFE_AVDD18_TXDAC2   } \
+-function       {   ground  AFE_AVSS_TXDAC2     }
+
+create_supply_set   SS_AFE_AVDD12_TXDAC2 \
+-function       {   power   AFE_AVDD12_TXDAC2   } \
+-function       {   ground  AFE_AVSS_TXDAC2     }
+
+create_supply_set   SS_AFE_DVDD09_TXDAC2 \
+-function       {   power   AFE_DVDD09_TXDAC2   } \
+-function       {   ground  AFE_DVSS_TXDAC2     }
+
+create_supply_set   SS_AFE_AVDD18_AUXDAC \
+-function       {   power   AFE_AVDD18_AUXDAC   } \
+-function       {   ground  AFE_AVSS_18AUXDAC   }
+
+create_supply_set   SS_AFE_AVDD18_PMU \
+-function       {   power   AFE_AVDD18_PMU      } \
+-function       {   ground  AFE_AVSS_PMU        }
+
+create_supply_set   SS_AFE_AVDD09_CKBUF \
+-function       {   power   AFE_AVDD09_CKBUF    } \
+-function       {   ground  AFE_AVSS_CKBUF      }
+#-------------------------------------------------------------------------------
+# AFE Supply Nets, Ports and Sets
+#-------------------------------------------------------------------------------
+
+
+# PM power pin
+create_supply_net   VDD33
+create_supply_port  VDD33    -direction  in
+connect_supply_net  VDD33    -ports      VDD33
+
+create_supply_net   VDD09
+create_supply_port  VDD09    -direction  in
+connect_supply_net  VDD09    -ports      VDD09
+
+create_supply_set   SS_VDD33_VSS \
+-function       {   power   VDD33      } \
+-function       {   ground  VSS        }
+
+create_supply_set   SS_VDD09_VSS \
+-function       {   power   VDD09    } \
+-function       {   ground  VSS      }
+
+connect_supply_net VDD09 -ports {u_misc_top_sv/u_misc_pm_ctrl_top_sv/u_pm_ctrl_top/u_PM_TOP/VDD09}
+connect_supply_net VDD33 -ports {u_misc_top_sv/u_misc_pm_ctrl_top_sv/u_pm_ctrl_top/u_PM_TOP/VDD33}
+connect_supply_net VSS -ports {u_misc_top_sv/u_misc_pm_ctrl_top_sv/u_pm_ctrl_top/u_PM_TOP/VSS}
+
+
+
+
+
+#-------------------------------------------------------------------------------
+# flatten mode load upf
+#-------------------------------------------------------------------------------
+
+puts $IS_SOC_FLATTEN
+if { $IS_SOC_FLATTEN == 1 } {
+    puts "flatten mode, upf is loaded!"
+    load_upf -scope $HIER_CPUSS   $SOC_HDN_UPF/cpuss.upf
+    load_upf -scope $HIER_DSPSS   $SOC_HDN_UPF/dspss.upf
+    load_upf -scope $HIER_AOSS    $SOC_HDN_UPF/aoss.upf
+    load_upf -scope $HIER_BB_TOP  $SOC_HDN_UPF/bbphy.upf
+    #load_upf -scope $HIER_DDRSS   $SOC_HDN_UPF/ddrss.upf
+} else {
+    puts "hierarchy mode, create and conncet supply net"
+    create_supply_net  VDD_N205
+    connect_supply_net VDD_N205   -ports $HIER_AOSS/VDD_N205
+    create_supply_set  SS_N205    -function {power VDD_N205} -function {ground VSS}
+
+    create_supply_net  VDD_CPUSS
+    connect_supply_net VDD_CPUSS   -ports $HIER_CPUSS/VDD_CPUSS
+    create_supply_set  SS_CPUSS    -function {power VDD_CPUSS} -function {ground VSS}
+
+    create_supply_net  VDD_DSPSS
+    connect_supply_net VDD_DSPSS   -ports $HIER_DSPSS/VDD_DSPSS
+    create_supply_set  SS_DSPSS    -function {power VDD_DSPSS} -function {ground VSS}
+
+    create_supply_net  VDD_CS
+    create_supply_net  VDD_DFF
+    create_supply_net  VDD_MEAS
+    create_supply_net  VDD_PDCSB
+    create_supply_net  VDD_PDCSS
+    create_supply_net  VDD_UL
+
+
+    connect_supply_net VDD_CS        -ports  $HIER_BB_TOP/VDD_CS
+    connect_supply_net VDD_DFF       -ports  $HIER_BB_TOP/VDD_DFF
+    connect_supply_net VDD_MEAS      -ports  $HIER_BB_TOP/VDD_MEAS
+    connect_supply_net VDD_PDCSB     -ports  $HIER_BB_TOP/VDD_PDCSB
+    connect_supply_net VDD_PDCSS     -ports  $HIER_BB_TOP/VDD_PDCSS
+    connect_supply_net VDD_UL        -ports  $HIER_BB_TOP/VDD_UL
+
+
+    create_supply_set  SS_CS         -function {power VDD_CS}      -function {ground VSS}
+    create_supply_set  SS_DFF        -function {power VDD_DFF}     -function {ground VSS}
+    create_supply_set  SS_MEAS       -function {power VDD_MEAS}    -function {ground VSS}
+    create_supply_set  SS_PDCSB      -function {power VDD_PDCSB}   -function {ground VSS}
+    create_supply_set  SS_PDCSS      -function {power VDD_PDCSS}   -function {ground VSS}
+    create_supply_set  SS_UL         -function {power VDD_UL}      -function {ground VSS}
+
+    create_supply_net  VDD_BBTOP
+    connect_supply_net VDD_BBTOP   -ports $HIER_BB_TOP/VDD_BBTOP
+    create_supply_set  SS_BBTOP    -function {power VDD_BBTOP} -function {ground VSS}
+
+
+    create_supply_set  SS_AOSS       -function {power VDD_AO}      -function {ground VSS}
+
+#    create_supply_net  VDD_DDR
+#    connect_supply_net VDD_DDR       -ports $HIER_DDRSS/VDD_gated
+#    create_supply_set  SS_DDRSS      -function {power VDD_DDR}     -function {ground VSS}
+}
+
+#-------------------------------------------------------------------------------
+# Supply Nets, Ports and Sets
+#-------------------------------------------------------------------------------
+create_supply_set   SS_BBPHY         -function        {power VDD_MDM}         -function {ground VSS}
+create_supply_set   SS_MAIN          -function        {power VDD_MAIN}        -function        {ground VSS}
+create_supply_set   SS_MDM           -function        {power VDD_MDM}         -function        {ground VSS}
+create_supply_set   SS_DSP           -function        {power VDD_DSP}         -function        {ground VSS}
+create_supply_set   SS_AO            -function        {power VDD_AO}          -function        {ground VSS}
+create_supply_set   SS_USB_VDDA      -function        {power USB_VDDA}        -function        {ground VSS}
+
+connect_supply_net  VDD_AO           -ports           $HIER_AOSS/VDD_AO
+connect_supply_net  VDD_MAIN         -ports           $HIER_CPUSS/VDD_MAIN
+connect_supply_net  VDD_MDM          -ports           $HIER_CPUSS/VDD_MDM
+connect_supply_net  VDD_MAIN         -ports           $HIER_DSPSS/VDD_MAIN
+connect_supply_net  VDD_MDM          -ports           $HIER_DSPSS/VDD_DSP
+connect_supply_net  VSS              -ports           $HIER_AOSS/VSS
+connect_supply_net  VSS              -ports           $HIER_CPUSS/VSS
+connect_supply_net  VSS              -ports           $HIER_DSPSS/VSS
+
+#---------------------------------------------------------------------------
+# DDR  Supply Nets and Ports
+#---------------------------------------------------------------------------
+create_supply_port  DDR_VCCA_PLL     -direction       inout
+create_supply_port  DDR_VDDQ         -direction       inout
+create_supply_port  DDR_VDDQLP       -direction       inout
+
+create_supply_net   DDR_VCCA_PLL
+create_supply_net   DDR_VDDQ
+create_supply_net   DDR_VDDQLP
+
+connect_supply_net  DDR_VCCA_PLL     -ports           DDR_VCCA_PLL
+connect_supply_net  DDR_VDDQ         -ports           DDR_VDDQ
+connect_supply_net  DDR_VDDQLP       -ports           DDR_VDDQLP
+
+create_supply_port  VSSQ             -direction       inout
+create_supply_net   VSSQ
+connect_supply_net  VSSQ             -ports           VSSQ
+
+create_supply_set   SS_DDR_VCCA_PLL  -function        {power DDR_VCCA_PLL}    -function        {ground VSS}
+create_supply_set   SS_DDR_VDDQ      -function        {power DDR_VDDQ    }    -function        {ground VSSQ}
+create_supply_set   SS_DDR_VDDQLP    -function        {power DDR_VDDQLP  }    -function        {ground VSS}
+create_supply_set   SS_DDRSS         -function        {power VDD_MAIN    }    -function        {ground VSS}
+
+
+connect_supply_net  VDD_MAIN         -ports           $HIER_DDRSS/VDD
+connect_supply_net  DDR_VCCA_PLL     -ports           $HIER_DDRSS/PLLVCCA
+connect_supply_net  DDR_VDDQ         -ports           $HIER_DDRSS/VDDQ
+connect_supply_net  DDR_VDDQLP       -ports           $HIER_DDRSS/VDDQL
+connect_supply_net  VSS              -ports           $HIER_DDRSS/VSS
+connect_supply_net  VSSQ             -ports           $HIER_DDRSS/VSSQ
+
+#---------------------------------------------------------------------------
+# PLL ANALOG PORT  Supply Nets and Ports
+#---------------------------------------------------------------------------
+create_supply_port  PLL_VCCA         -direction       inout
+create_supply_port  VCCD_PLL         -direction       inout
+create_supply_port  AVSS             -direction       inout
+
+create_supply_net   PLL_VCCA
+create_supply_net   VCCD_PLL
+create_supply_net   AVSS
+
+connect_supply_net  PLL_VCCA         -ports           PLL_VCCA
+connect_supply_net  VCCD_PLL         -ports           VCCD_PLL
+connect_supply_net  AVSS             -ports           AVSS
+
+create_supply_set   SS_PLL_VCCA      -function        {power PLL_VCCA}        -function        {ground AVSS}
+create_supply_set   SS_VCCD_PLL      -function        {power VCCD_PLL}        -function        {ground AVSS}
+
+connect_supply_net PLL_VCCA -ports { \
+u_misc_top_sv/u_misc_cpuss_pll_sv/u_pll/vcca \
+u_misc_top_sv/u_misc_chiptop_pll_sv/u_pll/vcca \
+}
+
+connect_supply_net VCCD_PLL -ports { \
+u_misc_top_sv/u_misc_cpuss_pll_sv/u_pll/vccdcore \
+u_misc_top_sv/u_misc_cpuss_pll_sv/u_pll/vccdpost \
+u_misc_top_sv/u_misc_chiptop_pll_sv/u_pll/vccdcore \
+u_misc_top_sv/u_misc_chiptop_pll_sv/u_pll/vccdpost \
+}
+
+connect_supply_net AVSS -ports { \
+u_misc_top_sv/u_misc_cpuss_pll_sv/u_pll/vssa \
+u_misc_top_sv/u_misc_chiptop_pll_sv/u_pll/vssa \
+}
+
+#-------------------------------------------------------------------------------
+# EFUSE Supply Nets and Ports
+#-------------------------------------------------------------------------------
+create_supply_port  EFUSE_VQPS       -direction       inout
+create_supply_net   EFUSE_VQPS
+connect_supply_net  EFUSE_VQPS       -ports           EFUSE_VQPS
+create_supply_set   SS_EFUSE_VQPS    -function        {power EFUSE_VQPS}      -function        {ground VSS}
+
+connect_supply_net  EFUSE_VQPS       -ports           $HIER_AOSS/EFUSE_VQPS
+
+#-------------------------------------------------------------------------------
+# TSENSOR Supply Nets and Ports
+#-------------------------------------------------------------------------------
+create_supply_port  TS_AVDD          -direction       inout
+create_supply_port  TS_AVSS          -direction       inout
+create_supply_net   TS_AVDD
+create_supply_net   TS_AVSS
+connect_supply_net  TS_AVDD          -ports           TS_AVDD
+connect_supply_net  TS_AVSS          -ports           TS_AVSS
+create_supply_set   SS_TS_AVDD       -function        {power TS_AVDD}         -function        {ground TS_AVSS}
+
+
+connect_supply_net  TS_AVDD          -ports           u_misc_top_sv/u_misc_t_sensor_sv/u_inno_tsensor_ip/AVDD
+connect_supply_net  TS_AVSS          -ports           u_misc_top_sv/u_misc_t_sensor_sv/u_inno_tsensor_ip/AVSS
+connect_supply_net  VDD_MAIN         -ports           u_misc_top_sv/u_misc_t_sensor_sv/u_inno_tsensor_ip/VDD
+connect_supply_net  VDD_MAIN         -ports           u_misc_top_sv/u_misc_t_sensor_sv/u_inno_tsensor_ip/VIN0
+connect_supply_net  VDD_MDM          -ports           u_misc_top_sv/u_misc_t_sensor_sv/u_inno_tsensor_ip/VIN1
+connect_supply_net  VDD_MDM          -ports           u_misc_top_sv/u_misc_t_sensor_sv/u_inno_tsensor_ip/VIN2
+connect_supply_net  VDD_MDM          -ports           u_misc_top_sv/u_misc_t_sensor_sv/u_inno_tsensor_ip/VIN3
+connect_supply_net  VSS              -ports           u_misc_top_sv/u_misc_t_sensor_sv/u_inno_tsensor_ip/VSS
+connect_supply_net  VSS              -ports           u_misc_top_sv/u_misc_t_sensor_sv/u_inno_tsensor_ip/VSSESD
+
+#-------------------------------------------------------------------------------
+# ADC Supply Nets and Ports
+#-------------------------------------------------------------------------------
+create_supply_port  ADC_AVDD         -direction       inout
+create_supply_port  ADC_AGND         -direction       inout
+create_supply_port  VREFP            -direction       inout
+
+create_supply_net   ADC_AVDD
+create_supply_net   ADC_AGND
+create_supply_net   VREFP
+
+connect_supply_net  ADC_AVDD         -ports           ADC_AVDD
+connect_supply_net  ADC_AGND         -ports           ADC_AGND
+connect_supply_net  VREFP            -ports           VREFP
+
+create_supply_set   SS_ADC_AVDD      -function        {power ADC_AVDD}        -function        {ground ADC_AGND}
+create_supply_set   SS_VREFP_AGND    -function        {power VREFP}           -function        {ground ADC_AGND}
+
+connect_supply_net  ADC_AVDD         -ports           u_misc_top_sv/u_misc_ad_ctrl_top_sv/u_ad_ctrl_top/u_inno_saradc_ip/AVDD
+connect_supply_net  ADC_AGND         -ports           u_misc_top_sv/u_misc_ad_ctrl_top_sv/u_ad_ctrl_top/u_inno_saradc_ip/AGND
+connect_supply_net  VDD_MAIN         -ports           u_misc_top_sv/u_misc_ad_ctrl_top_sv/u_ad_ctrl_top/u_inno_saradc_ip/VDD
+connect_supply_net  VSS              -ports           u_misc_top_sv/u_misc_ad_ctrl_top_sv/u_ad_ctrl_top/u_inno_saradc_ip/VSS
+connect_supply_net  VSS              -ports           u_misc_top_sv/u_misc_ad_ctrl_top_sv/u_ad_ctrl_top/u_inno_saradc_ip/VSSESD
+connect_supply_net  VREFP            -ports           u_misc_top_sv/u_misc_ad_ctrl_top_sv/u_ad_ctrl_top/u_inno_saradc_ip/VREFP
+
+#                                                     u_misc_top_sv/u_misc_ad_ctrl_top_sv/u_ad_ctrl_top/u_inno_saradc_ip/VREFP
+
+#-------------------------------------------------------------------------------
+# BB PHY ANALOG PORT  Supply Nets and Ports
+#-------------------------------------------------------------------------------
+connect_supply_net  VDD_MDM          -ports           $HIER_BB_TOP/VDD_MDM
+connect_supply_net  VDD_MAIN         -ports           $HIER_BB_TOP/VDD_MAIN
+connect_supply_net  VSS              -ports           $HIER_BB_TOP/VSS
+#---------------------------------------
+# Analog AFE supplies
+#---------------------------------------
+# DFF Harden: afe pll power pin
+connect_supply_net  AFE_AVDD12_PLL_VCO  -port $HIER_BB_TOP/AFE_AVDD12_PLL_VCO
+connect_supply_net  AFE_AVSS_PLL_VCO    -port $HIER_BB_TOP/AFE_AVSS_PLL_VCO
+
+connect_supply_net  AFE_AVDD09_PLL_MMD  -port $HIER_BB_TOP/AFE_AVDD09_PLL_MMD
+connect_supply_net  AFE_AVSS_PLL_MMD    -port $HIER_BB_TOP/AFE_AVSS_PLL_MMD
+
+connect_supply_net  AFE_AVDD09_PLL_CP   -port $HIER_BB_TOP/AFE_AVDD09_PLL_CP
+connect_supply_net  AFE_AVSS_PLL_CP     -port $HIER_BB_TOP/AFE_AVSS_PLL_CP
+
+# DFF Harden: afe prxadc power pin
+connect_supply_net  AFE_AVDD12_PRXADC   -port $HIER_BB_TOP/AFE_AVDD12_PRXADC
+connect_supply_net  AFE_DVDD09_PRXADC   -port $HIER_BB_TOP/AFE_DVDD09_PRXADC
+connect_supply_net  AFE_AVSS_PRXADC     -port $HIER_BB_TOP/AFE_AVSS_PRXADC
+connect_supply_net  AFE_DVSS_PRXADC     -port $HIER_BB_TOP/AFE_DVSS_PRXADC
+
+# DFF Harden: afe drxadc power pin
+connect_supply_net  AFE_AVDD12_DRXADC   -port $HIER_BB_TOP/AFE_AVDD12_DRXADC
+connect_supply_net  AFE_DVDD09_DRXADC   -port $HIER_BB_TOP/AFE_DVDD09_DRXADC
+connect_supply_net  AFE_AVSS_DRXADC     -port $HIER_BB_TOP/AFE_AVSS_DRXADC
+connect_supply_net  AFE_DVSS_DRXADC     -port $HIER_BB_TOP/AFE_DVSS_DRXADC
+
+# DFF Harden: afe orxadc power pin
+connect_supply_net  AFE_AVDD12_ORXADC   -port $HIER_BB_TOP/AFE_AVDD12_ORXADC
+connect_supply_net  AFE_DVDD09_ORXADC   -port $HIER_BB_TOP/AFE_DVDD09_ORXADC
+connect_supply_net  AFE_AVSS_ORXADC     -port $HIER_BB_TOP/AFE_AVSS_ORXADC
+connect_supply_net  AFE_DVSS_ORXADC     -port $HIER_BB_TOP/AFE_DVSS_ORXADC
+
+# DFF Harden: afe txdac1 power pin
+connect_supply_net  AFE_AVDD18_TXDAC1   -port $HIER_BB_TOP/AFE_AVDD18_TXDAC1
+connect_supply_net  AFE_AVDD12_TXDAC1   -port $HIER_BB_TOP/AFE_AVDD12_TXDAC1
+connect_supply_net  AFE_DVDD09_TXDAC1   -port $HIER_BB_TOP/AFE_DVDD09_TXDAC1
+connect_supply_net  AFE_AVSS_TXDAC1     -port $HIER_BB_TOP/AFE_AVSS_TXDAC1
+connect_supply_net  AFE_DVSS_TXDAC1     -port $HIER_BB_TOP/AFE_DVSS_TXDAC1
+
+# DFF Harden: afe txdac2 power pin
+connect_supply_net  AFE_AVDD18_TXDAC2   -port $HIER_BB_TOP/AFE_AVDD18_TXDAC2
+connect_supply_net  AFE_AVDD12_TXDAC2   -port $HIER_BB_TOP/AFE_AVDD12_TXDAC2
+connect_supply_net  AFE_DVDD09_TXDAC2   -port $HIER_BB_TOP/AFE_DVDD09_TXDAC2
+connect_supply_net  AFE_AVSS_TXDAC2     -port $HIER_BB_TOP/AFE_AVSS_TXDAC2
+connect_supply_net  AFE_DVSS_TXDAC2     -port $HIER_BB_TOP/AFE_DVSS_TXDAC2
+
+# DFF Harden: afe auxdac power pin
+connect_supply_net  AFE_AVDD18_AUXDAC   -port $HIER_BB_TOP/AFE_AVDD18_AUXDAC
+connect_supply_net  AFE_AVSS_18AUXDAC   -port $HIER_BB_TOP/AFE_AVSS_18AUXDAC
+
+# DFF Harden: afe pmu power pin
+connect_supply_net  AFE_AVDD18_PMU      -port $HIER_BB_TOP/AFE_AVDD18_PMU
+connect_supply_net  AFE_AVSS_PMU        -port $HIER_BB_TOP/AFE_AVSS_PMU
+
+# DFF Harden: afe ckbuf power pin
+connect_supply_net  AFE_AVDD09_CKBUF    -port $HIER_BB_TOP/AFE_AVDD09_CKBUF
+connect_supply_net  AFE_AVSS_CKBUF      -port $HIER_BB_TOP/AFE_AVSS_CKBUF
+
+
+
+#-------------------------------------------------------------------------------
+# USB PHY Supply Nets and Ports
+#-------------------------------------------------------------------------------
+create_supply_port  USB_VCCA33       -direction       inout
+create_supply_port  USB_VCCA18       -direction       inout
+create_supply_port  USB_AVSS         -direction       inout
+
+create_supply_net   USB_VCCA33
+create_supply_net   USB_VCCA18
+create_supply_net   USB_AVSS
+
+connect_supply_net  USB_VCCA33       -ports           USB_VCCA33
+connect_supply_net  USB_VCCA18       -ports           USB_VCCA18
+connect_supply_net  USB_AVSS         -ports           USB_AVSS
+
+create_supply_set   SS_USB_VCCA33    -function        {power USB_VCCA33}        -function       {ground USB_AVSS}
+create_supply_set   SS_USB_VCCA18    -function        {power USB_VCCA18}        -function       {ground USB_AVSS}
+
+connect_supply_net  USB_AVSS         -ports           u_peri_top_sv/u_peri_usb_top_sv/u_usb_top/u_usb_phy/AGND
+connect_supply_net  USB_VCCA33       -ports           u_peri_top_sv/u_peri_usb_top_sv/u_usb_top/u_usb_phy/VCCA33
+connect_supply_net  USB_VCCA18       -ports           u_peri_top_sv/u_peri_usb_top_sv/u_usb_top/u_usb_phy/VCCA18
+connect_supply_net  VSS              -ports           u_peri_top_sv/u_peri_usb_top_sv/u_usb_top/u_usb_phy/VSSD1
+connect_supply_net  VSS              -ports           u_peri_top_sv/u_peri_usb_top_sv/u_usb_top/u_usb_phy/VSSD2
+connect_supply_net  USB_VDDA         -ports           u_peri_top_sv/u_peri_usb_top_sv/u_usb_top/u_usb_phy/VDDA
+
+
+#-------------------------------------------------------------------------------
+# IO PAD Supply Nets and Ports
+#-------------------------------------------------------------------------------
+#AOSS
+create_supply_port  VDD1V8_AO        -direction       inout
+create_supply_net   VDD1V8_AO
+connect_supply_net  VDD1V8_AO        -ports           VDD1V8_AO
+
+create_supply_port  VDD1V2_AO        -direction       inout
+create_supply_net   VDD1V2_AO
+connect_supply_net  VDD1V2_AO        -ports           VDD1V2_AO
+
+create_supply_port  VDD1V8_USIM2     -direction       inout
+create_supply_net   VDD1V8_USIM2
+connect_supply_net  VDD1V8_USIM2     -ports           VDD1V8_USIM2
+
+create_supply_port  VDD1V8_USIM1     -direction       inout
+create_supply_net   VDD1V8_USIM1
+connect_supply_net  VDD1V8_USIM1     -ports           VDD1V8_USIM1
+
+create_supply_port  VDD3V3_USIM2     -direction       inout
+create_supply_net   VDD3V3_USIM2
+connect_supply_net  VDD3V3_USIM2     -ports           VDD3V3_USIM2
+
+create_supply_port  VDD3V3_USIM1     -direction       inout
+create_supply_net   VDD3V3_USIM1
+connect_supply_net  VDD3V3_USIM1     -ports           VDD3V3_USIM1
+
+create_supply_port -direction in VDDPST180_USIM2
+create_supply_port -direction in VDDPST180_USIM1
+create_supply_net  VDDPST180_USIM2
+create_supply_net  VDDPST180_USIM1
+connect_supply_net VDDPST180_USIM2   -ports VDDPST180_USIM2
+connect_supply_net VDDPST180_USIM1   -ports VDDPST180_USIM1
+
+create_supply_set   SS_1V2_AO        -function        {power VDD1V2_AO}         -function       {ground VSS}
+create_supply_set   SS_1V8_AO        -function        {power VDD1V8_AO}         -function       {ground VSS}
+create_supply_set   SS_1V8_USIM2     -function        {power VDD1V8_USIM2}      -function       {ground VSS}
+create_supply_set   SS_1V8_USIM1     -function        {power VDD1V8_USIM1}      -function       {ground VSS}
+create_supply_set   SS_3V3_USIM2     -function        {power VDD3V3_USIM2}      -function       {ground VSS}
+create_supply_set   SS_3V3_USIM1     -function        {power VDD3V3_USIM1}      -function       {ground VSS}
+create_supply_set   SS_VDDPST180_USIM1 -function      {power VDDPST180_USIM1}   -function {ground VSS}
+create_supply_set   SS_VDDPST180_USIM2 -function      {power VDDPST180_USIM2}   -function {ground VSS}
+
+connect_supply_net  VDD1V8_AO        -ports           $HIER_AOSS/VDD1V8_AO
+connect_supply_net  VDD1V2_AO        -ports           $HIER_AOSS/VDD1V2_AO
+connect_supply_net  VDD1V8_USIM2     -ports           $HIER_AOSS/VDD1V8_USIM2
+connect_supply_net  VDD3V3_USIM2     -ports           $HIER_AOSS/VDD3V3_USIM2
+connect_supply_net  VDD1V8_USIM1     -ports           $HIER_AOSS/VDD1V8_USIM1
+connect_supply_net  VDD3V3_USIM1     -ports           $HIER_AOSS/VDD3V3_USIM1
+connect_supply_net  VDDPST180_USIM1     -ports        $HIER_AOSS/VDDPST180_USIM1
+connect_supply_net  VDDPST180_USIM2     -ports        $HIER_AOSS/VDDPST180_USIM2
+
+#SOC_TOP
+create_supply_port  VDD1V8_TOP       -direction       inout
+create_supply_net   VDD1V8_TOP
+connect_supply_net  VDD1V8_TOP       -ports           VDD1V8_TOP
+
+create_supply_port  VDD1V2_TOP       -direction       inout
+create_supply_net   VDD1V2_TOP
+connect_supply_net  VDD1V2_TOP       -ports           VDD1V2_TOP
+
+create_supply_set   SS_1V8_TOP       -function        {power VDD1V8_TOP}         -function        {ground VSS}
+create_supply_set   SS_1V2_TOP       -function        {power VDD1V2_TOP}         -function        {ground VSS}
+
+
+##-------------------------------------------------------------------------------
+## IO PAD Supply connect
+##-------------------------------------------------------------------------------
+#########   IO PAD DOMAIN 5    ######################
+connect_supply_net VDD1V2_TOP -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_obb_int_n_pad/u_INNO_GPIO_CELL/VDDQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_cmd_pad/u_INNO_GPIO_CELL/VDDQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_ck_pad/u_INNO_GPIO_CELL/VDDQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_da0_pad/u_INNO_GPIO_CELL/VDDQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_da1_pad/u_INNO_GPIO_CELL/VDDQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_da2_pad/u_INNO_GPIO_CELL/VDDQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_da3_pad/u_INNO_GPIO_CELL/VDDQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_clk_en_pad/u_INNO_GPIO_CELL/VDDQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_int_pad/u_INNO_GPIO_CELL/VDDQ \
+}
+
+connect_supply_net VDD_MAIN -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_obb_int_n_pad/u_INNO_GPIO_CELL/VDD \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_cmd_pad/u_INNO_GPIO_CELL/VDD \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_ck_pad/u_INNO_GPIO_CELL/VDD \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_da0_pad/u_INNO_GPIO_CELL/VDD \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_da1_pad/u_INNO_GPIO_CELL/VDD \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_da2_pad/u_INNO_GPIO_CELL/VDD \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_da3_pad/u_INNO_GPIO_CELL/VDD \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_clk_en_pad/u_INNO_GPIO_CELL/VDD \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_int_pad/u_INNO_GPIO_CELL/VDD \
+}
+
+connect_supply_net VSS -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_obb_int_n_pad/u_INNO_GPIO_CELL/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_cmd_pad/u_INNO_GPIO_CELL/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_ck_pad/u_INNO_GPIO_CELL/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_da0_pad/u_INNO_GPIO_CELL/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_da1_pad/u_INNO_GPIO_CELL/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_da2_pad/u_INNO_GPIO_CELL/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_da3_pad/u_INNO_GPIO_CELL/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_clk_en_pad/u_INNO_GPIO_CELL/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_int_pad/u_INNO_GPIO_CELL/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_obb_int_n_pad/u_INNO_GPIO_CELL/VSSQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_cmd_pad/u_INNO_GPIO_CELL/VSSQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_ck_pad/u_INNO_GPIO_CELL/VSSQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_da0_pad/u_INNO_GPIO_CELL/VSSQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_da1_pad/u_INNO_GPIO_CELL/VSSQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_da2_pad/u_INNO_GPIO_CELL/VSSQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_device_da3_pad/u_INNO_GPIO_CELL/VSSQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_clk_en_pad/u_INNO_GPIO_CELL/VSSQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_sdio_int_pad/u_INNO_GPIO_CELL/VSSQ \
+}
+
+#########   IO PAD DOMAIN 6    ######################
+connect_supply_net VDD1V2_TOP -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2s_sclk_pad/u_INNO_GPIO_CELL/VDDQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2s_ws_pad/u_INNO_GPIO_CELL/VDDQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2s_mosi_pad/u_INNO_GPIO_CELL/VDDQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2s_miso_pad/u_INNO_GPIO_CELL/VDDQ \
+}
+
+connect_supply_net VDD_MAIN -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2s_sclk_pad/u_INNO_GPIO_CELL/VDD \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2s_ws_pad/u_INNO_GPIO_CELL/VDD \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2s_mosi_pad/u_INNO_GPIO_CELL/VDD \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2s_miso_pad/u_INNO_GPIO_CELL/VDD \
+}
+
+connect_supply_net VSS -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2s_sclk_pad/u_INNO_GPIO_CELL/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2s_ws_pad/u_INNO_GPIO_CELL/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2s_mosi_pad/u_INNO_GPIO_CELL/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2s_miso_pad/u_INNO_GPIO_CELL/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2s_sclk_pad/u_INNO_GPIO_CELL/VSSQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2s_ws_pad/u_INNO_GPIO_CELL/VSSQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2s_mosi_pad/u_INNO_GPIO_CELL/VSSQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2s_miso_pad/u_INNO_GPIO_CELL/VSSQ \
+}
+
+#########   IO PAD DOMAIN 7    ######################
+connect_supply_net VDD1V2_TOP -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2c0_scl_pad/u_INNO_GPIO_CELL/VDDQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2c0_sda_pad/u_INNO_GPIO_CELL/VDDQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2c1_scl_pad/u_INNO_GPIO_CELL/VDDQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2c1_sda_pad/u_INNO_GPIO_CELL/VDDQ \
+}
+
+connect_supply_net VDD_MAIN -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2c0_scl_pad/u_INNO_GPIO_CELL/VDD \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2c0_sda_pad/u_INNO_GPIO_CELL/VDD \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2c1_scl_pad/u_INNO_GPIO_CELL/VDD \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2c1_sda_pad/u_INNO_GPIO_CELL/VDD \
+}
+
+connect_supply_net VSS -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2c0_scl_pad/u_INNO_GPIO_CELL/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2c0_sda_pad/u_INNO_GPIO_CELL/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2c1_scl_pad/u_INNO_GPIO_CELL/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2c1_sda_pad/u_INNO_GPIO_CELL/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2c0_scl_pad/u_INNO_GPIO_CELL/VSSQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2c0_sda_pad/u_INNO_GPIO_CELL/VSSQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2c1_scl_pad/u_INNO_GPIO_CELL/VSSQ \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_i2c1_sda_pad/u_INNO_GPIO_CELL/VSSQ \
+}
+
+#########   IO PAD DOMAIN 8    ######################
+connect_supply_net VDD1V8_TOP -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_spi_cxx_cs_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_spi_cxx_sck_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_spi_cxx_mosi_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_spi_cxx_miso_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+}
+
+connect_supply_net  VDD_MAIN -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_spi_cxx_cs_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_spi_cxx_sck_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_spi_cxx_mosi_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_spi_cxx_miso_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+}
+
+connect_supply_net  VSS -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_spi_cxx_cs_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_spi_cxx_sck_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_spi_cxx_mosi_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_spi_cxx_miso_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_spi_cxx_cs_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_spi_cxx_sck_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_spi_cxx_mosi_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_peri_io_ring/u_spi_cxx_miso_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+}
+
+#########   IO PAD DOMAIN 9    ######################
+connect_supply_net VDD1V8_TOP -ports { \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi0_scl_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi0_sda_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi1_scl_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi1_sda_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi2_scl_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi2_sda_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc0_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc1_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc2_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc3_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc4_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc5_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc6_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc7_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc8_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc9_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc10_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc11_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc12_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc13_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc14_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc15_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc16_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc17_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc18_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc19_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc20_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc21_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc22_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc23_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc24_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc25_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc26_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc27_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc28_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc29_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc30_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc31_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc32_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc33_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc34_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc35_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc36_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc37_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+}
+
+connect_supply_net  VDD_MAIN -ports { \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi0_scl_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi0_sda_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi1_scl_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi1_sda_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi2_scl_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi2_sda_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc0_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc1_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc2_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc3_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc4_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc5_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc6_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc7_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc8_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc9_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc10_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc11_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc12_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc13_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc14_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc15_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc16_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc17_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc18_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc19_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc20_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc21_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc22_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc23_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc24_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc25_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc26_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc27_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc28_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc29_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc30_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc31_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc32_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc33_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc34_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc35_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc36_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc37_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+}
+
+connect_supply_net  VSS -ports { \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi0_scl_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi0_sda_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi1_scl_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi1_sda_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi2_scl_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi2_sda_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc0_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc1_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc2_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc3_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc4_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc5_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc6_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc7_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc8_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc9_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc10_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc11_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc12_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc13_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc14_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc15_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc16_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc17_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc18_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc19_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc20_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc21_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc22_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc23_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc24_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc25_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc26_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc27_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc28_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc29_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc30_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc31_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc32_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc33_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc34_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc35_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc36_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc37_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi0_scl_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi0_sda_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi1_scl_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi1_sda_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi2_scl_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_mipi2_sda_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc0_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc1_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc2_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc3_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc4_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc5_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc6_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc7_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc8_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc9_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc10_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc11_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc12_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc13_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc14_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc15_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc16_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc17_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc18_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc19_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc20_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc21_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc22_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc23_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc24_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc25_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc26_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc27_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc28_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc29_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc30_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc31_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc32_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc33_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc34_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc35_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc36_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_grfc37_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+}
+
+#########   IO PAD DOMAIN 9    ######################
+connect_supply_net VDD1V8_TOP -ports { \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_spi_tr_cs_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_spi_tr_sck_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_spi_tr_mosi_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_spi_tr_miso_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+}
+
+connect_supply_net  VDD_MAIN -ports { \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_spi_tr_cs_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_spi_tr_sck_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_spi_tr_mosi_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_spi_tr_miso_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+}
+
+connect_supply_net  VSS -ports { \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_spi_tr_cs_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_spi_tr_sck_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_spi_tr_mosi_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_spi_tr_miso_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_spi_tr_cs_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_spi_tr_sck_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_spi_tr_mosi_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_bb_phy_top_sv/u_bbphy_io_top_sv/u_bbphy_io_top/u_bbphy_io_ring/u_spi_tr_miso_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+}
+
+####################################################
+connect_supply_net VDD_MAIN -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io5_vref_inno_poc_cell/VDD \
+}
+
+connect_supply_net VDD1V2_TOP -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io5_vref_inno_poc_cell/VDDQ \
+}
+
+connect_supply_net VSS -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io5_vref_inno_poc_cell/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io5_vref_inno_poc_cell/VSSQ \
+}
+
+set_port_attributes -ports u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io5_vref_inno_poc_cell/VREF -driver_supply SS_1V2_TOP 
+set_port_attributes -ports u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io6_vref_inno_poc_cell/VREF -driver_supply SS_1V2_TOP 
+set_port_attributes -ports u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io5_vref_inno_poc_cell/PWROKB_H -driver_supply SS_1V2_TOP 
+set_port_attributes -ports u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io6_vref_inno_poc_cell/PWROKB_H -driver_supply SS_1V2_TOP 
+set_port_attributes -ports u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io7_vref_inno_poc_cell/PWROKB_H -driver_supply SS_1V2_TOP 
+
+set_port_attributes -ports u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io5_vref_vref/u_INNO_VREF_CELL/VREF -driver_supply SS_1V2_TOP 
+set_port_attributes -ports u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io6_vref_vref/u_INNO_VREF_CELL/VREF -driver_supply SS_1V2_TOP 
+set_port_attributes -ports u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io7_vref_vref/u_INNO_VREF_CELL/VREF -driver_supply SS_1V2_TOP 
+
+set_port_attributes -ports u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io5_vref_vref/u_INNO_VREF_CELL/PWROKB_H -driver_supply SS_1V2_TOP 
+set_port_attributes -ports u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io6_vref_vref/u_INNO_VREF_CELL/PWROKB_H -driver_supply SS_1V2_TOP 
+set_port_attributes -ports u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io7_vref_vref/u_INNO_VREF_CELL/PWROKB_H -driver_supply SS_1V2_TOP 
+
+
+connect_supply_net VDD1V2_TOP -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io6_vref_inno_poc_cell/VDDQ \
+}
+connect_supply_net VDD_MAIN -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io6_vref_inno_poc_cell/VDD \
+}
+connect_supply_net VSS -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io6_vref_inno_poc_cell/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io6_vref_inno_poc_cell/VSSQ \
+}
+
+connect_supply_net VDD1V2_TOP -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io7_vref_inno_poc_cell/VDDQ \
+}
+connect_supply_net VDD_MAIN -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io7_vref_inno_poc_cell/VDD \
+}
+connect_supply_net VSS -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io7_vref_inno_poc_cell/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io7_vref_inno_poc_cell/VSSQ \
+}
+
+connect_supply_net VDD1V2_TOP -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io5_vref_vref/u_INNO_VREF_CELL/VDDQ \
+}
+connect_supply_net VDD_MAIN -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io5_vref_vref/u_INNO_VREF_CELL/VDD \
+}
+connect_supply_net VSS -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io5_vref_vref/u_INNO_VREF_CELL/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io5_vref_vref/u_INNO_VREF_CELL/VSSQ \
+}
+
+connect_supply_net VDD1V2_TOP -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io6_vref_vref/u_INNO_VREF_CELL/VDDQ \
+}
+connect_supply_net VDD_MAIN -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io6_vref_vref/u_INNO_VREF_CELL/VDD \
+}
+connect_supply_net VSS -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io6_vref_vref/u_INNO_VREF_CELL/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io6_vref_vref/u_INNO_VREF_CELL/VSSQ \
+}
+
+connect_supply_net VDD1V2_TOP -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io7_vref_vref/u_INNO_VREF_CELL/VDDQ \
+}
+connect_supply_net VDD_MAIN -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io7_vref_vref/u_INNO_VREF_CELL/VDD \
+}
+connect_supply_net VSS -ports { \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io7_vref_vref/u_INNO_VREF_CELL/VSS \
+u_peri_top_sv/u_peri_io_top_sv/u_peri_io_top/u_io7_vref_vref/u_INNO_VREF_CELL/VSSQ \
+}
+
+
+
+
+#-------------------------------------------------------------------------------
+# SDIO Power Domains
+#-------------------------------------------------------------------------------
+set sdio_clamp1_signal   [ list \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/slv2app_rden_r[0] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/slv2app_rden_r[1] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/slv2app_rden_r[2] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/slv2app_rden_r[3] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/curr_width[0] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/blk_size[9] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/cr2all_argument[31] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/cr2all_argument[13] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/cr2all_argument[10] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/cr2all_argument[9] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/cr2all_argument[3] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/cr2all_argument[0] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/cr2all_rca[0] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/dbg_cr[10] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/dbg_cr[9] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/dbg_cr[7] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/dbg_com[9] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/dbg_com[4] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/dbg_dma0[17] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/dbg_dma3[8] \
+                                \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/sys_rst_n \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/sd_rst_n \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/sys_rst_n \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/sd_rst_n \
+                                \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/cr2all_index[5] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/cr2all_index[4] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/cr2all_index[2] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/fn0reg2all_ioen_cmd53 \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/fn0reg2all_iordy_cmd53 \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/sd_mmc_sel[1] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/sync2all_wr_last_blk_busy \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/sync2all_card_init_done \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/cr2all_argument[21] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/cr2all_argument[13] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/cr2all_argument[10] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/cr2all_argument[9] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/cr2all_argument[3] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/cr2all_argument[0] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/sd_mmc_sel[1] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/cr2all_index[5] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/cr2all_index[4] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/cr2all_index[2] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/OCR[15] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/OCR[16] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/OCR[17] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/OCR[18] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/OCR[19] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/OCR[20] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/OCR[21] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/OCR[22] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/OCR[23] \
+                                u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper/OCR[29] \
+                         ]
+                                #u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_wrapper/u_smid_csr/sys_clk \
+                                #u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_i_csm_wrapper/u_smid_i_csm/sd_clk \
+                                #u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_sync_wrapper/u_smid_sync/sys_clk \
+                                #u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_sync_wrapper/u_smid_sync/sd_clk \
+                                #
+
+create_power_domain PD_SDIO_AO  -elements {u_peri_top_sv/u_peri_sdio_device_sv/u_sdio_device_top/u_smid_top/u_smid_core/u_smid_csr_i_csm_sync_wrapper } \
+                                -supply   {primary SS_AO}
+
+#set pwr_ao_ss_iso_en  u_ao_top_sv/u_aoss_func_top/soctop_iso_en
+set pwr_ao_ss_iso_en  u_ao_top_sv/u_ao_top/aoss_dummy_out[0]   
+                                    
+set_isolation iso_sdio_0 -domain PD_SDIO_AO \
+     -clamp_value 0 \
+     -applies_to inputs \
+     -exclude_elements "$sdio_clamp1_signal" \
+     -isolation_signal "$pwr_ao_ss_iso_en" \
+     -isolation_sense high \
+     -isolation_supply_set SS_AO \
+     -location self \
+     -source SS_MAIN \
+     -force_isolation \
+     -name_suffix ISO_sdio_0
+
+set_isolation iso_sdio_1 -domain PD_SDIO_AO \
+     -clamp_value 1 \
+     -applies_to inputs \
+     -elements "$sdio_clamp1_signal" \
+     -isolation_signal "$pwr_ao_ss_iso_en" \
+     -isolation_sense high \
+     -isolation_supply_set SS_AO \
+     -location self \
+     -source SS_MAIN \
+     -force_isolation \
+     -name_suffix ISO_sdio_1
+
+#set_port_attributes -ports u_ao_top_sv/u_ao_top/aoss_dummy_out[0] -driver_supply SS_AO
+
+use_interface_cell iso_sdio_impl_0 -strategy {iso_sdio_0} \
+-domain PD_SDIO_AO \
+-lib_cells {ISOLOD*}
+
+use_interface_cell iso_sdio_impl_1 -strategy {iso_sdio_1} \
+-domain PD_SDIO_AO \
+-lib_cells {ISOHID*}
+
+#-------------------------------------------------------------------------------
+# Power Domains
+#-------------------------------------------------------------------------------
+create_power_domain PD_SOCTOP    -elements   {.}   -supply   {primary  SS_MAIN}
+
+
+foreach i [dict keys $SOC_DIC_HIER] {
+    set hdn $i
+    set HDN [string toupper $i]
+    set hier [dict get $SOC_DIC_HIER $i]
+
+    if { $IS_SOC_FLATTEN == 0 } {
+        create_power_domain PD_${HDN} -elements "$hier"   -supply     "primary SS_$HDN"
+        puts "the hier power domain PD_$HDN is created!"
+    } else {
+        puts "the flat power domain PD_$HDN is loaded through block upf!"
+    }
+ }
+
+ 
+#set_port_attributes -ports {u_cpuss_top_sv/pwr_cpu_ss_psw_en} -driver_supply SS_MAIN  -receiver_supply SS_MAIN
+#set_port_attributes -ports {u_dspss_top_sv/pwr_dspss_psw_en} -driver_supply SS_MAIN  -receiver_supply SS_MAIN
+
+#-------------------------------------------------------------------------------
+# SOC TOP MEMORY CONNECT SUPPLY
+#-------------------------------------------------------------------------------
+set list_ram_soctop [find_objects u_peri_top_sv -pattern *TS83*_lib -object_type inst -transitive TRUE]
+#set list_rom_soctop [find_objects u_peri_top_sv -pattern *srom*_lib -object_type inst -transitive TRUE]
+
+puts  "//////////////////////////////////"
+puts  "// soc top ram list "
+foreach i $list_ram_soctop {puts $i}
+puts  "---------------------------------"
+puts  "//////////////////////////////////"
+#puts  "// soc top rom list "
+#foreach i $list_rom_soctop {puts $i}
+#puts  "---------------------------------"
+#puts  "//////////////////////////////////"
+#puts  "\n"
+
+foreach mem_i $list_ram_soctop {
+connect_supply_net VDD_MAIN -ports ${mem_i}/VDDCE
+connect_supply_net VDD_MAIN -ports ${mem_i}/VDDPE
+connect_supply_net VSS      -ports ${mem_i}/VSSE
+}
+
+
+#set_port_attributes -ports {u_bb_phy_top_sv/u_bb_phy_top/bbphy2mp_intp[40] u_bb_phy_top_sv/u_bb_phy_top/bbphy2dsp_intp[40]} -driver_supply SS_MAIN
+
+#-------------------------------------------------------------------------------
+# Power State Setting
+#-------------------------------------------------------------------------------
+set PST_SS_MAIN         SS_MAIN
+set PST_SS_MDM          SS_MDM
+set PST_SS_DSP          SS_DSP
+set PST_SS_USB_VDDA     SS_USB_VDDA
+set PST_SS_AO           SS_AO
+
+if { $IS_SOC_FLATTEN == 0 } {
+    set PST_SS_N205            SS_N205
+    set PST_SS_CPUSS           SS_CPUSS
+    set PST_SS_DSPSS           SS_DSPSS
+    set PST_SS_BBTOP           SS_BBTOP
+    set PST_SS_CS              SS_CS
+    set PST_SS_DFF             SS_DFF
+    set PST_SS_MEAS            SS_MEAS
+    set PST_SS_PDCSB           SS_PDCSB
+    set PST_SS_PDCSS           SS_PDCSS
+    set PST_SS_UL              SS_UL
+} else {
+    set PST_SS_N205            u_ao_top_sv/u_ao_top/SS_N205
+    set PST_SS_CPUSS           u_cpuss_top_sv/u_cpuss_top/SS_CPUSS
+    set PST_SS_DSPSS           u_dspss_top_sv/u_dspss_top/SS_DSPSS
+    set PST_SS_BBTOP           u_bb_phy_top_sv/u_bb_phy_top/SS_BBTOP
+    set PST_SS_CS              u_bb_phy_top_sv/u_bb_phy_top/bb_phy_dig_inst/cs_hd_wrap_inst/cs_hd_top_inst/SS_CS_PG
+    set PST_SS_DFF             u_bb_phy_top_sv/u_bb_phy_top/bb_phy_dig_inst/dff_hd_wrap_inst/dff_hd_top_inst/SS_DFF_PG
+    set PST_SS_MEAS            u_bb_phy_top_sv/u_bb_phy_top/bb_phy_dig_inst/meas_hd_wrap_inst/meas_hd_top_inst/SS_MEAS_PG
+    set PST_SS_PDCSB           u_bb_phy_top_sv/u_bb_phy_top/bb_phy_dig_inst/pdcs_hd_wrap_inst/rx_pdcs_top_inst/pdcsb_hd_top_inst/SS_PDCSB_PG
+    set PST_SS_PDCSS           u_bb_phy_top_sv/u_bb_phy_top/bb_phy_dig_inst/pdcs_hd_wrap_inst/rx_pdcs_top_inst/pdcss_hd_top_inst/SS_PDCSS_PG
+    set PST_SS_UL              u_bb_phy_top_sv/u_bb_phy_top/bb_phy_dig_inst/ul_hd_wrap_inst/ul_hd_top_inst/SS_UL_PG
+}
+
+add_power_state -supply  $PST_SS_AO \
+                -state ON   { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  }
+
+add_power_state -supply  $PST_SS_MAIN \
+                -state ON   { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  } \
+                -state OFF  { -supply_expr { power  == { OFF          } && ground == { FULL_ON 0.0 } } -simstate CORRUPT }
+
+add_power_state -supply  $PST_SS_DSP \
+                -state VDDH { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } -simstate NORMAL } \
+                -state VDDL { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } -simstate NORMAL } \
+                -state OFF  { -supply_expr { power  == { OFF          } && ground == { FULL_ON 0.0 } } -simstate CORRUPT }
+
+add_power_state -supply  $PST_SS_MDM \
+                -state VDDH { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } -simstate NORMAL } \
+                -state VDDL { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } -simstate NORMAL } \
+                -state OFF  { -supply_expr { power  == { OFF          } && ground == { FULL_ON 0.0 } } -simstate CORRUPT }
+
+add_power_state -supply  $PST_SS_USB_VDDA \
+                -state ON   { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  } \
+                -state OFF  { -supply_expr { power  == { OFF          } && ground == { FULL_ON 0.0 } } -simstate CORRUPT }
+
+add_power_state -supply  SS_1V8_TOP \
+                -state ON   { -supply_expr { power  == { FULL_ON 1.62 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  }
+
+add_power_state -supply  SS_1V2_TOP \
+                -state ON   { -supply_expr { power  == { FULL_ON 1.14 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  }
+
+add_power_state -supply  SS_PLL_VCCA \
+                -state ON   { -supply_expr { power  == { FULL_ON 1.98 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  }
+
+add_power_state -supply  SS_VCCD_PLL \
+                -state ON   { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  } \
+                -state OFF  { -supply_expr { power  == { OFF          } && ground == { FULL_ON 0.0 } } -simstate CORRUPT }
+
+add_power_state -supply  SS_EFUSE_VQPS \
+                -state ON   { -supply_expr { power  == { FULL_ON 1.62 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  }
+
+add_power_state -supply  SS_ADC_AVDD \
+                -state ON   { -supply_expr { power  == { FULL_ON 1.62 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  }
+
+add_power_state -supply  SS_DDR_VCCA_PLL \
+                -state ON   { -supply_expr { power  == { FULL_ON 1.98 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  }
+
+add_power_state -supply  SS_DDR_VDDQ \
+                -state ON   { -supply_expr { power  == { FULL_ON 1.08 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  }
+
+add_power_state -supply  SS_DDR_VDDQLP \
+                -state ON   { -supply_expr { power  == { FULL_ON 0.66 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  }
+
+add_power_state -supply  SS_TS_AVDD \
+                -state ON   { -supply_expr { power  == { FULL_ON 1.98 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  }
+
+add_power_state -supply  SS_USB_VCCA33 \
+                -state ON   { -supply_expr { power  == { FULL_ON 2.97 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  }
+
+add_power_state -supply  SS_USB_VCCA18 \
+                -state ON   { -supply_expr { power  == { FULL_ON 1.62 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  }
+
+add_power_state -supply  SS_1V8_AO \
+                -state ON   { -supply_expr { power  == { FULL_ON 1.8  } && ground == { FULL_ON 0.0 } } -simstate NORMAL  }
+
+add_power_state -supply  SS_1V2_AO \
+                -state ON   { -supply_expr { power  == { FULL_ON 1.2  } && ground == { FULL_ON 0.0 } } -simstate NORMAL  }
+
+add_power_state -supply  SS_1V8_USIM2 \
+                -state ON   { -supply_expr { power  == { FULL_ON 1.8  } && ground == { FULL_ON 0.0 } } -simstate NORMAL  }
+
+add_power_state -supply  SS_1V8_USIM1 \
+                -state ON   { -supply_expr { power  == { FULL_ON 1.8  } && ground == { FULL_ON 0.0 } } -simstate NORMAL  }
+
+add_power_state -supply  SS_3V3_USIM2 \
+                -state ON   { -supply_expr { power  == { FULL_ON 3.3  } && ground == { FULL_ON 0.0 } } -simstate NORMAL  }
+
+add_power_state -supply  SS_3V3_USIM1 \
+                -state ON   { -supply_expr { power  == { FULL_ON 3.3  } && ground == { FULL_ON 0.0 } } -simstate NORMAL  }
+
+add_power_state  -supply  SS_VDDPST180_USIM1 \
+                    -state ON   {-supply_expr {power  == {FULL_ON 1.62} && ground  == {FULL_ON 0.0} } }
+
+add_power_state  -supply  SS_VDDPST180_USIM2 \
+                    -state ON   {-supply_expr {power  == {FULL_ON 1.62} && ground  == {FULL_ON 0.0} } }
+
+
+
+if { $IS_SOC_FLATTEN == 0 } {
+add_power_state -supply  $PST_SS_N205 \
+                -state ON   { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  } \
+                -state OFF  { -supply_expr { power  == { OFF          } && ground == { FULL_ON 0.0 } } -simstate CORRUPT }
+
+add_power_state -supply  $PST_SS_CPUSS \
+                -state VDDH { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } -simstate NORMAL } \
+                -state VDDL { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } -simstate NORMAL } \
+                -state OFF  { -supply_expr { power  == { OFF          } && ground == { FULL_ON 0.0 } } -simstate CORRUPT }
+
+add_power_state -supply  $PST_SS_DSPSS \
+                -state VDDH { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } -simstate NORMAL } \
+                -state VDDL { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } -simstate NORMAL } \
+                -state OFF  { -supply_expr { power  == { OFF          } && ground == { FULL_ON 0.0 } } -simstate CORRUPT }
+
+add_power_state -supply  $PST_SS_BBTOP \
+                -state VDDH { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } -simstate NORMAL } \
+                -state VDDL { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } -simstate NORMAL } \
+                -state OFF  { -supply_expr { power  == { OFF          } && ground == { FULL_ON 0.0 } } -simstate CORRUPT }
+
+add_power_state -supply  $PST_SS_CS \
+                -state VDDH   { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  } \
+                -state VDDL   { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } -simstate NORMAL } \
+                -state OFF  { -supply_expr { power  == { OFF          } && ground == { FULL_ON 0.0 } } -simstate CORRUPT }
+
+add_power_state -supply  $PST_SS_DFF \
+                -state VDDH   { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  } \
+                -state VDDL   { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } -simstate NORMAL } \
+                -state OFF  { -supply_expr { power  == { OFF          } && ground == { FULL_ON 0.0 } } -simstate CORRUPT }
+
+add_power_state -supply  $PST_SS_MEAS \
+                -state VDDH   { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  } \
+                -state VDDL   { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } -simstate NORMAL } \
+                -state OFF  { -supply_expr { power  == { OFF          } && ground == { FULL_ON 0.0 } } -simstate CORRUPT }
+
+add_power_state -supply  $PST_SS_PDCSB \
+                -state VDDH   { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  } \
+                -state VDDL   { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } -simstate NORMAL } \
+                -state OFF  { -supply_expr { power  == { OFF          } && ground == { FULL_ON 0.0 } } -simstate CORRUPT }
+
+add_power_state -supply  $PST_SS_PDCSS \
+                -state VDDH   { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  } \
+                -state VDDL   { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } -simstate NORMAL } \
+                -state OFF  { -supply_expr { power  == { OFF          } && ground == { FULL_ON 0.0 } } -simstate CORRUPT }
+
+add_power_state -supply  $PST_SS_UL \
+                -state VDDH   { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } -simstate NORMAL  } \
+                -state VDDL   { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } -simstate NORMAL } \
+                -state OFF  { -supply_expr { power  == { OFF          } && ground == { FULL_ON 0.0 } } -simstate CORRUPT }
+}
+
+
+
+
+add_power_state \
+-supply            SS_AFE_AVDD12_PLL_VCO \
+-state ON       { -supply_expr { power  == { FULL_ON 1.08 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+add_power_state \
+-supply            SS_AFE_AVDD09_PLL_MMD \
+-state VDDH     { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL     { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+add_power_state \
+-supply            SS_AFE_AVDD09_PLL_CP \
+-state VDDH     { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL     { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+
+
+add_power_state \
+-supply            SS_AFE_AVDD12_PRXADC \
+-state ON       { -supply_expr { power  == { FULL_ON 1.08 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+add_power_state \
+-supply            SS_AFE_DVDD09_PRXADC \
+-state VDDH     { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL     { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+
+
+add_power_state \
+-supply            SS_AFE_AVDD12_DRXADC \
+-state ON       { -supply_expr { power  == { FULL_ON 1.08 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+add_power_state \
+-supply            SS_AFE_DVDD09_DRXADC \
+-state VDDH     { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL     { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+
+
+add_power_state \
+-supply            SS_AFE_AVDD12_ORXADC \
+-state ON       { -supply_expr { power  == { FULL_ON 1.08 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+add_power_state \
+-supply            SS_AFE_DVDD09_ORXADC \
+-state VDDH     { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL     { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+
+
+add_power_state \
+-supply            SS_AFE_AVDD18_TXDAC1 \
+-state ON       { -supply_expr { power  == { FULL_ON 1.62 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+add_power_state \
+-supply            SS_AFE_AVDD12_TXDAC1 \
+-state ON       { -supply_expr { power  == { FULL_ON 1.08 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+add_power_state \
+-supply            SS_AFE_DVDD09_TXDAC1 \
+-state VDDH     { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL     { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+
+
+add_power_state \
+-supply            SS_AFE_AVDD18_TXDAC2 \
+-state ON       { -supply_expr { power  == { FULL_ON 1.62 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+add_power_state \
+-supply            SS_AFE_AVDD12_TXDAC2 \
+-state ON       { -supply_expr { power  == { FULL_ON 1.08 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+add_power_state \
+-supply            SS_AFE_DVDD09_TXDAC2 \
+-state VDDH     { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL     { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+
+
+add_power_state \
+-supply            SS_AFE_AVDD18_AUXDAC \
+-state ON       { -supply_expr { power  == { FULL_ON 1.62 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+
+
+add_power_state \
+-supply            SS_AFE_AVDD18_PMU \
+-state ON       { -supply_expr { power  == { FULL_ON 1.62 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+
+
+add_power_state \
+-supply            SS_AFE_AVDD09_CKBUF \
+-state VDDH     { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL     { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+
+
+add_power_state \
+-supply            SS_VDD33_VSS \
+-state ON       { -supply_expr { power  == { FULL_ON 1.62 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+
+add_power_state \
+-supply            SS_VDD09_VSS \
+-state ON       { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+
+
+
+#-------------------------------------------------------------------------------
+# Power State 
+#-------------------------------------------------------------------------------
+if { $USE_RAM_SIM_MODEL == 0 } {
+add_power_state -domain PD_SOCTOP \
+-state ST1    " -logic_expr { $PST_SS_AO == ON   && $PST_SS_N205 == OFF  && $PST_SS_MAIN == OFF && SS_VDD33_VSS == OFF  && SS_VDD09_VSS == OFF  && $PST_SS_MDM == OFF  && $PST_SS_CPUSS == OFF  && $PST_SS_DSP == OFF  && $PST_SS_DSPSS == OFF  && SS_VCCD_PLL == OFF && $PST_SS_USB_VDDA == OFF && $PST_SS_BBTOP == OFF  && $PST_SS_DFF == OFF  && $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == OFF  && $PST_SS_CS == OFF  && $PST_SS_MEAS == OFF  } " \
+-state ST2    " -logic_expr { $PST_SS_AO == ON   && $PST_SS_N205 == ON   && $PST_SS_MAIN == OFF && SS_VDD33_VSS == OFF  && SS_VDD09_VSS == OFF  && $PST_SS_MDM == OFF  && $PST_SS_CPUSS == OFF  && $PST_SS_DSP == OFF  && $PST_SS_DSPSS == OFF  && SS_VCCD_PLL == OFF && $PST_SS_USB_VDDA == OFF && $PST_SS_BBTOP == OFF  && $PST_SS_DFF == OFF  && $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == OFF  && $PST_SS_CS == OFF  && $PST_SS_MEAS == OFF  } " \
+-state ST3    " -logic_expr { $PST_SS_AO == ON   && $PST_SS_N205 == ON   && $PST_SS_MAIN == ON && SS_VDD33_VSS == ON  && SS_VDD09_VSS == ON   && $PST_SS_MDM == VDDH && $PST_SS_CPUSS == OFF  && $PST_SS_DSP == VDDH && $PST_SS_DSPSS == OFF  && SS_VCCD_PLL == ON  && $PST_SS_USB_VDDA == ON  && $PST_SS_BBTOP == OFF  && $PST_SS_DFF == OFF  && $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == OFF  && $PST_SS_CS == OFF  && $PST_SS_MEAS == OFF  } " \
+-state ST4    " -logic_expr { $PST_SS_AO == ON   && $PST_SS_N205 == ON   && $PST_SS_MAIN == ON && SS_VDD33_VSS == ON  && SS_VDD09_VSS == ON   && $PST_SS_MDM == VDDH && $PST_SS_CPUSS == OFF  && $PST_SS_DSP == VDDH && $PST_SS_DSPSS == VDDH && SS_VCCD_PLL == ON  && $PST_SS_USB_VDDA == ON  && $PST_SS_BBTOP == VDDH  && $PST_SS_DFF == VDDH && $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == OFF  && $PST_SS_CS == OFF  && $PST_SS_MEAS == OFF  } " \
+-state ST5    " -logic_expr { $PST_SS_AO == ON   && $PST_SS_N205 == ON   && $PST_SS_MAIN == ON && SS_VDD33_VSS == ON  && SS_VDD09_VSS == ON   && $PST_SS_MDM == VDDH && $PST_SS_CPUSS == VDDH && $PST_SS_DSP == VDDH && $PST_SS_DSPSS == OFF  && SS_VCCD_PLL == ON  && $PST_SS_USB_VDDA == ON  && $PST_SS_BBTOP == VDDH && $PST_SS_DFF == VDDH &&  $PST_SS_PDCSB == VDDH && $PST_SS_PDCSS == VDDH && $PST_SS_UL == OFF  && $PST_SS_CS == OFF  && $PST_SS_MEAS == OFF  } " \
+-state ST6    " -logic_expr { $PST_SS_AO == ON   && $PST_SS_N205 == ON   && $PST_SS_MAIN == ON && SS_VDD33_VSS == ON  && SS_VDD09_VSS == ON   && $PST_SS_MDM == VDDH && $PST_SS_CPUSS == VDDH && $PST_SS_DSP == VDDH && $PST_SS_DSPSS == VDDH && SS_VCCD_PLL == ON  && $PST_SS_USB_VDDA == ON  && $PST_SS_BBTOP == VDDH && $PST_SS_DFF == VDDH &&  $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == VDDH && $PST_SS_CS == OFF  && $PST_SS_MEAS == OFF  } " \
+-state ST7    " -logic_expr { $PST_SS_AO == ON   && $PST_SS_N205 == ON   && $PST_SS_MAIN == ON && SS_VDD33_VSS == ON  && SS_VDD09_VSS == ON   && $PST_SS_MDM == VDDH && $PST_SS_CPUSS == VDDH && $PST_SS_DSP == VDDH && $PST_SS_DSPSS == VDDH && SS_VCCD_PLL == ON  && $PST_SS_USB_VDDA == ON  && $PST_SS_BBTOP == VDDH && $PST_SS_DFF == VDDH &&  $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == OFF  && $PST_SS_CS == VDDH && $PST_SS_MEAS == OFF  } " \
+-state ST8    " -logic_expr { $PST_SS_AO == ON   && $PST_SS_N205 == ON   && $PST_SS_MAIN == ON && SS_VDD33_VSS == ON  && SS_VDD09_VSS == ON   && $PST_SS_MDM == VDDH && $PST_SS_CPUSS == VDDH && $PST_SS_DSP == VDDH && $PST_SS_DSPSS == VDDH && SS_VCCD_PLL == ON  && $PST_SS_USB_VDDA == ON  && $PST_SS_BBTOP == VDDH && $PST_SS_DFF == VDDH &&  $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == OFF  && $PST_SS_CS == OFF  && $PST_SS_MEAS == VDDH } " \
+-state ST9    " -logic_expr { $PST_SS_AO == ON   && $PST_SS_N205 == ON   && $PST_SS_MAIN == ON && SS_VDD33_VSS == ON  && SS_VDD09_VSS == ON   && $PST_SS_MDM == VDDH && $PST_SS_CPUSS == VDDH && $PST_SS_DSP == VDDH && $PST_SS_DSPSS == VDDH && SS_VCCD_PLL == ON  && $PST_SS_USB_VDDA == ON  && $PST_SS_BBTOP == VDDH && $PST_SS_DFF == VDDH &&  $PST_SS_PDCSB == VDDH && $PST_SS_PDCSS == VDDH && $PST_SS_UL == VDDH && $PST_SS_CS == VDDH && $PST_SS_MEAS == VDDH } " \
+-state ST10   " -logic_expr { $PST_SS_AO == ON   && $PST_SS_N205 == ON   && $PST_SS_MAIN == ON && SS_VDD33_VSS == ON  && SS_VDD09_VSS == ON   && $PST_SS_MDM == VDDL && $PST_SS_CPUSS == OFF  && $PST_SS_DSP == VDDL && $PST_SS_DSPSS == OFF  && SS_VCCD_PLL == ON  && $PST_SS_USB_VDDA == ON  && $PST_SS_BBTOP == OFF  && $PST_SS_DFF == OFF  && $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == OFF  && $PST_SS_CS == OFF  && $PST_SS_MEAS == OFF  } " \
+-state ST11   " -logic_expr { $PST_SS_AO == ON   && $PST_SS_N205 == ON   && $PST_SS_MAIN == ON && SS_VDD33_VSS == ON  && SS_VDD09_VSS == ON   && $PST_SS_MDM == VDDL && $PST_SS_CPUSS == OFF  && $PST_SS_DSP == VDDL && $PST_SS_DSPSS == VDDL && SS_VCCD_PLL == ON  && $PST_SS_USB_VDDA == ON  && $PST_SS_BBTOP == VDDL  && $PST_SS_DFF == VDDL &&  $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == OFF  && $PST_SS_CS == OFF  && $PST_SS_MEAS == OFF  } " \
+-state ST12   " -logic_expr { $PST_SS_AO == ON   && $PST_SS_N205 == ON   && $PST_SS_MAIN == ON && SS_VDD33_VSS == ON  && SS_VDD09_VSS == ON   && $PST_SS_MDM == VDDL && $PST_SS_CPUSS == VDDL && $PST_SS_DSP == VDDL && $PST_SS_DSPSS == OFF  && SS_VCCD_PLL == ON  && $PST_SS_USB_VDDA == ON  && $PST_SS_BBTOP == VDDL && $PST_SS_DFF == VDDL &&  $PST_SS_PDCSB == VDDL && $PST_SS_PDCSS == VDDL && $PST_SS_UL == OFF  && $PST_SS_CS == OFF  && $PST_SS_MEAS == OFF  } " \
+-state ST13   " -logic_expr { $PST_SS_AO == ON   && $PST_SS_N205 == ON   && $PST_SS_MAIN == ON && SS_VDD33_VSS == ON  && SS_VDD09_VSS == ON   && $PST_SS_MDM == VDDL && $PST_SS_CPUSS == VDDL && $PST_SS_DSP == VDDL && $PST_SS_DSPSS == VDDL && SS_VCCD_PLL == ON  && $PST_SS_USB_VDDA == ON  && $PST_SS_BBTOP == VDDL && $PST_SS_DFF == VDDL &&  $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == VDDL && $PST_SS_CS == OFF  && $PST_SS_MEAS == OFF  } " \
+-state ST14   " -logic_expr { $PST_SS_AO == ON   && $PST_SS_N205 == ON   && $PST_SS_MAIN == ON && SS_VDD33_VSS == ON  && SS_VDD09_VSS == ON   && $PST_SS_MDM == VDDL && $PST_SS_CPUSS == VDDL && $PST_SS_DSP == VDDL && $PST_SS_DSPSS == VDDL && SS_VCCD_PLL == ON  && $PST_SS_USB_VDDA == ON  && $PST_SS_BBTOP == VDDL && $PST_SS_DFF == VDDL &&  $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == OFF  && $PST_SS_CS == VDDL && $PST_SS_MEAS == OFF  } " \
+-state ST15   " -logic_expr { $PST_SS_AO == ON   && $PST_SS_N205 == ON   && $PST_SS_MAIN == ON && SS_VDD33_VSS == ON  && SS_VDD09_VSS == ON   && $PST_SS_MDM == VDDL && $PST_SS_CPUSS == VDDL && $PST_SS_DSP == VDDL && $PST_SS_DSPSS == VDDL && SS_VCCD_PLL == ON  && $PST_SS_USB_VDDA == ON  && $PST_SS_BBTOP == VDDL && $PST_SS_DFF == VDDL &&  $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == OFF  && $PST_SS_CS == OFF  && $PST_SS_MEAS == VDDL } " \
+-state ST16   " -logic_expr { $PST_SS_AO == ON   && $PST_SS_N205 == ON   && $PST_SS_MAIN == ON && SS_VDD33_VSS == ON  && SS_VDD09_VSS == ON   && $PST_SS_MDM == VDDL && $PST_SS_CPUSS == VDDL && $PST_SS_DSP == VDDL && $PST_SS_DSPSS == VDDL && SS_VCCD_PLL == ON  && $PST_SS_USB_VDDA == ON  && $PST_SS_BBTOP == VDDL && $PST_SS_DFF == VDDL &&  $PST_SS_PDCSB == VDDL && $PST_SS_PDCSS == VDDL && $PST_SS_UL == VDDL && $PST_SS_CS == VDDL && $PST_SS_MEAS == VDDL } " \
+-state ST17   " -logic_expr { $PST_SS_AO == ON   && $PST_SS_N205 == ON   && $PST_SS_MAIN == ON && SS_VDD33_VSS == ON  && SS_VDD09_VSS == ON   && $PST_SS_MDM == VDDH   && $PST_SS_CPUSS == VDDH   && $PST_SS_DSP == VDDH   && $PST_SS_DSPSS == VDDH   && SS_VCCD_PLL == ON &&  $PST_SS_USB_VDDA == ON  && $PST_SS_BBTOP == VDDH   && $PST_SS_DFF == VDDH    && $PST_SS_PDCSB == VDDH && $PST_SS_PDCSS == VDDH   && $PST_SS_UL == VDDH      && $PST_SS_CS == VDDH   && $PST_SS_MEAS == VDDH  } " 
+}
+#-------------------------------------------------------------------------------
+# Ports Setting
+#-------------------------------------------------------------------------------
+############# IO 0 #############################################
+set_port_attributes -ports {AO_SYSRST_N AO_ERR_STATE_N AO_LP_EN_N AO_WAKE_DEVICE} -driver_supply SS_1V2_AO -receiver_supply SS_1V2_AO
+
+############# IO 1 #############################################
+set_port_attributes -ports {AO_RTC32K_CLK} -driver_supply SS_1V2_AO -receiver_supply SS_1V2_AO
+
+############# IO 2 #############################################
+set_port_attributes -ports {AO_32K_CLK_SEL AO_BOOT_MODE0 AO_BOOT_MODE1 AO_CLK_MODE0 AO_CLK_MODE1 AO_CXX_INT_IN AO_CXX_INT_OUT AO_XWSE_INT AO_TEST_MODE AO_PMIC_I2C_SCL AO_PMIC_I2C_SDA AO_UART_TX AO_UART_RX AO_SWC AO_SWD} -driver_supply SS_1V8_AO -receiver_supply SS_1V8_AO
+
+############# IO 3 #############################################
+set_port_attributes -ports {AO_USIM_CLK AO_USIM_RST AO_USIM_DATA} -driver_supply SS_3V3_USIM1 -receiver_supply SS_3V3_USIM1
+
+############# IO 4 #############################################
+set_port_attributes -ports {AO_SPI_CS AO_SPI_SCK AO_SPI_MOSI AO_SPI_MISO}  -driver_supply SS_3V3_USIM2 -receiver_supply SS_3V3_USIM2
+
+############# IO 5 #############################################
+set_port_attributes -ports {OBB_INT_N SDIO_DEVICE_CMD SDIO_DEVICE_CK SDIO_DEVICE_DA0 SDIO_DEVICE_DA1 SDIO_DEVICE_DA2 SDIO_DEVICE_DA3 SDIO_CLK_EN SDIO_INT}  -driver_supply SS_1V2_TOP -receiver_supply SS_1V2_TOP
+
+############# IO 6 #############################################
+set_port_attributes -ports {I2S_SCLK I2S_WS I2S_MOSI I2S_MISO} -driver_supply SS_1V2_TOP -receiver_supply SS_1V2_TOP
+
+############# IO 7 #############################################
+set_port_attributes -ports {I2C0_SCL I2C0_SDA I2C1_SCL I2C1_SDA} -driver_supply SS_1V2_TOP -receiver_supply SS_1V2_TOP
+
+############# IO 8 #############################################
+set_port_attributes -ports {SPI_CXX_CS SPI_CXX_SCK SPI_CXX_MOSI SPI_CXX_MISO} -driver_supply SS_1V8_TOP -receiver_supply SS_1V8_TOP
+
+############# IO 9 #############################################
+set_port_attributes -ports {SPI_TR_CS SPI_TR_SCK SPI_TR_MOSI SPI_TR_MISO MIPI0_SCL MIPI0_SDA MIPI1_SCL MIPI1_SDA MIPI2_SCL MIPI2_SDA GRFC0 GRFC1 GRFC2 GRFC3 GRFC4 GRFC5 GRFC6 GRFC7 GRFC8 GRFC9 GRFC10 GRFC11 GRFC12 GRFC13 GRFC14 GRFC15 GRFC16 GRFC17 GRFC18 GRFC19 GRFC20 GRFC21 GRFC22 GRFC23 GRFC24 GRFC25 GRFC26 GRFC27 GRFC28 GRFC29 GRFC30 GRFC31 GRFC32 GRFC33 GRFC34 GRFC35 GRFC36 GRFC37} -driver_supply SS_1V8_TOP -receiver_supply SS_1V8_TOP
+
+############# IO USB #############################################
+set_port_attributes -ports { USB2_DP USB2_DM } -driver_supply SS_USB_VCCA33 -receiver_supply SS_USB_VCCA33
+set_port_attributes -ports { USB2_ID USB2_REXT USB2_VBUS } -driver_supply SS_USB_VCCA18 -receiver_supply SS_USB_VCCA18
+
+############# IO ADC #############################################
+#set_port_attributes -ports {AD_VIN0 AD_VIN1 AD_VIN2 AD_VIN3 AD_VREFP} -driver_supply SS_ADC_AVDD -receiver_supply SS_ADC_AVDD
+
+############# IO DDR #############################################
+set_port_attributes -ports {DDR_DMI0 DDR_DMI1 DDR_DQ0 DDR_DQ1 DDR_DQ2 DDR_DQ3 DDR_DQ4 DDR_DQ5 DDR_DQ6 DDR_DQ7 DDR_DQ8 DDR_DQ9 DDR_DQ10 DDR_DQ11 DDR_DQ12 DDR_DQ13 DDR_DQ14 DDR_DQ15 DDR_DQS0_T DDR_DQS1_T DDR_DQS0_C DDR_DQS1_C DDR_ZQ} -driver_supply SS_DDR_VDDQ -receiver_supply SS_DDR_VDDQ
+set_port_attributes -ports {DDR_CK_T DDR_CK_C DDR_CA0 DDR_CA1 DDR_CA2 DDR_CA3 DDR_CA4 DDR_CA5 DDR_CA6 DDR_CA7 DDR_CA8 DDR_CA9 DDR_RESET_N DDR_CKE DDR_CS DDR_ODT} -driver_supply SS_DDR_VDDQ -receiver_supply SS_DDR_VDDQ
+
+############# IO BBPHY #############################################
+##set_port_attributes -ports {ADC0_PAD_VINN_I ADC0_PAD_VINN_Q ADC0_PAD_VINP_I ADC0_PAD_VINP_Q ADC1_PAD_VINN_I ADC1_PAD_VINN_Q ADC1_PAD_VINP_I ADC1_PAD_VINP_Q ORX0_PAD_VINN_I ORX0_PAD_VINN_Q ORX0_PAD_VINP_I ORX0_PAD_VINP_Q } -driver_supply SS_AFE_AVDD18_TXDAC1 -receiver_supply SS_AFE_AVDD18_TXDAC1
+##set_port_attributes -ports {DAC0_PAD_TXDAC_IOUT_IN DAC0_PAD_TXDAC_IOUT_IP DAC0_PAD_TXDAC_IOUT_QN DAC0_PAD_TXDAC_IOUT_QP DAC1_PAD_TXDAC_IOUT_IN DAC1_PAD_TXDAC_IOUT_IP DAC1_PAD_TXDAC_IOUT_QN DAC1_PAD_TXDAC_IOUT_QP DAC_TCXO_VOUT} -driver_supply SS_AFE_AVDD18_TXDAC1 -receiver_supply SS_AFE_AVDD18_TXDAC1
