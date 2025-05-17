@@ -1,0 +1,280 @@
+# -----------------------------------------------------------------------------
+#  Function: This is a block-level upf for ca53_cpu
+# -----------------------------------------------------------------------------
+upf_version 2.1 
+#-------------------------------------------------------------------------------
+# Supply Nets and Ports
+#-------------------------------------------------------------------------------
+create_supply_port VDD_MAIN
+create_supply_port VDD_DSP
+create_supply_port VSS
+
+create_supply_net VDD_MAIN
+create_supply_net VDD_DSP
+create_supply_net VSS
+
+connect_supply_net VDD_MAIN -ports VDD_MAIN
+connect_supply_net VDD_DSP  -ports VDD_DSP
+connect_supply_net VSS      -ports VSS
+
+create_supply_net VDD_DSP_OFF
+#-------------------------------------------------------------------------------
+# Supply Sets
+#-------------------------------------------------------------------------------
+create_supply_set SS_MAIN   -function {power VDD_MAIN}  -function {ground VSS}
+create_supply_set SS_DSP    -function {power VDD_DSP}   -function {ground VSS}
+create_supply_set SS_DSPSS  -function {power VDD_DSP_OFF} -function {ground VSS}
+#-------------------------------------------------------------------------------
+# Elements
+#-------------------------------------------------------------------------------
+set DSPSS_hier "u_dspss_func_top"
+#-------------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------------
+# Power Domains
+#-------------------------------------------------------------------------------
+create_power_domain PD_DSPSS -include_scope \
+                             -supply {primary SS_MAIN} 
+
+create_power_domain PD_DSPSS_PG -elements "$DSPSS_hier" \
+                                -supply {primary SS_DSPSS}
+
+#-------------------------------------------------------------------------------
+# Power Switch Setting
+#-------------------------------------------------------------------------------
+#create_logic_net pwr_dspss_psw_ack
+#connect_logic_net pwr_dspss_psw_ack -ports u_pwr_dspss_psw_ack_buf/buf_in
+
+set pwr_dspss_psw_en    u_dspss_func_top/pwr_dspss_psw_en
+set pwr_dspss_psw_ack   u_dspss_func_top/pwr_dspss_psw_ack
+
+create_power_switch psw_PDDSPSS  -domain PD_DSPSS_PG \
+    -input_supply_port  {TVDD       SS_DSP.power} \
+    -output_supply_port {VDD        SS_DSPSS.power} \
+    -control_port       "NSLEEPIN1  $pwr_dspss_psw_en" \
+    -control_port       "NSLEEPIN2  $pwr_dspss_psw_en" \
+    -on_state           {ON         TVDD {(NSLEEPIN1) && (NSLEEPIN2)}} \
+    -off_state          {OFF        {(!NSLEEPIN1) && (!NSLEEPIN2)}} \
+    -ack_port           "NSLEEPOUT1 $pwr_dspss_psw_ack {NSLEEPIN1 && NSLEEPIN2}"
+
+#map_power_switch psw_PDDSPSS -domain PD_DSPSS -lib_cells {HDRDID2BWP7T40P140LVT}
+map_power_switch psw_PDDSPSS -domain PD_DSPSS_PG -lib_cells {HDRDID*}
+
+
+#-------------------------------------------------------------------------------
+# Isolation Setting
+#-------------------------------------------------------------------------------
+# None
+set DSPSS_clamp1_signal    [list $DSPSS_hier/dspss_bus_clk_divider_status\[1\] \
+                                 $DSPSS_hier/dspss_cevax_psu_cactive_r \
+                                 $DSPSS_hier/dspss_cevax_psu_csysack_r \
+                                 $DSPSS_hier/dspss_cevax_ocm_jtag_state_r \
+                                 $DSPSS_hier/dspedp_nordpending \
+                                 $DSPSS_hier/dspedp_nowrpending \
+                                 $DSPSS_hier/dspepp_nordpending \
+                                 $DSPSS_hier/dspepp_nowrpending \
+                           ]
+
+set DSPSS_lp_signal      $DSPSS_hier/pwr_dspss_psw_ack
+
+set DSPSS_exclude_signal [ concat $DSPSS_clamp1_signal $DSPSS_lp_signal ]
+
+puts  "////////////////////////////////////////////"
+puts  "// DSPSS exclude signals list "
+foreach i $DSPSS_exclude_signal {puts $i}
+puts  "--------------------------------------------"
+puts  "////////////////////////////////////////////"
+puts  "\n"
+
+
+set pwr_dspss_iso_en  $DSPSS_hier/pwr_dspss_iso_en
+
+set_isolation iso_dspss_0 -domain PD_DSPSS_PG \
+     -clamp_value 0 \
+     -applies_to outputs \
+     -exclude_elements "$DSPSS_exclude_signal" \
+     -isolation_signal "$pwr_dspss_iso_en" \
+     -isolation_sense high \
+     -isolation_supply_set SS_MAIN \
+     -sink SS_MAIN \
+     -location parent \
+     -force_isolation \
+     -name_suffix ISO_DSP_0
+
+set_level_shifter ls_dspss_out_0 -domain PD_DSPSS_PG \
+     -location parent \
+     -applies_to outputs \
+     -exclude_elements "$DSPSS_exclude_signal" \
+     -sink SS_MAIN \
+     -rule high_to_low \
+     -force_shift
+
+set_isolation iso_dspss_1 -domain PD_DSPSS_PG \
+     -clamp_value 1 \
+     -elements "$DSPSS_clamp1_signal" \
+     -isolation_signal "$pwr_dspss_iso_en" \
+     -isolation_sense high \
+     -isolation_supply_set SS_MAIN \
+     -sink SS_MAIN \
+     -location parent \
+     -force_isolation \
+     -name_suffix ISO_DSP_1
+
+set_level_shifter ls_dspss_out_1 -domain PD_DSPSS_PG \
+     -location parent \
+     -applies_to outputs \
+     -elements "$DSPSS_clamp1_signal" \
+     -sink SS_MAIN \
+     -rule high_to_low \
+     -force_shift
+
+use_interface_cell els_dspss_impl_0 -strategy {iso_dspss_0 ls_dspss_out_0} \
+-domain PD_DSPSS_PG \
+-lib_cells {LVLHLCLOD*}
+
+use_interface_cell els_dspss_impl_1 -strategy {iso_dspss_1 ls_dspss_out_1} \
+-domain PD_DSPSS_PG \
+-lib_cells {LVLHLCD*} 
+
+set_level_shifter       lvl_hl_dsp2soc_no_clamp                                 \
+    -domain                 PD_DSPSS_PG                                                \
+    -location               parent                                                  \
+    -sink                   SS_MAIN                                                 \
+    -input_supply_set       SS_DSP                                                  \
+    -output_supply_set      SS_MAIN                                                 \
+    -elements               "$DSPSS_lp_signal"                                \
+    -rule                   high_to_low                                             \
+    -force_shift
+
+use_interface_cell      lvl_hl_dsp2soc_no_clamp_impl                            \
+-domain                 PD_DSPSS_PG                                                \
+-lib_cells              { LVLHLD* }                                             \
+-strategy               { lvl_hl_dsp2soc_no_clamp }
+
+
+#-------------------------------------------------------------------------------
+# level shifter Setting
+#-------------------------------------------------------------------------------
+set DSPSS_in_lp_signal   [list $DSPSS_hier/pwr_dspss_psw_en   ]
+set list_dspss_i_pgen    [find_objects "u_dspss_func_top" -pattern *pg_ctrl*      -object_type port -direction in]
+set list_dspss_main_to_mdm [concat $DSPSS_in_lp_signal $list_dspss_i_pgen ]
+
+set_level_shifter ls_dspss_in_lp -domain PD_DSPSS_PG \
+     -location parent \
+     -applies_to inputs \
+     -elements "$list_dspss_main_to_mdm" \
+     -input_supply_set       SS_MAIN \
+     -output_supply_set      SS_DSP \
+     -rule low_to_high \
+     -force_shift
+
+set_level_shifter ls_dspss_in -domain PD_DSPSS_PG \
+     -location parent \
+     -applies_to inputs \
+     -exclude_elements "$list_dspss_main_to_mdm" \
+     -input_supply_set       SS_MAIN \
+     -output_supply_set      SS_DSPSS \
+     -rule low_to_high \
+     -force_shift
+
+use_interface_cell ls_dspss_impl_lp -strategy {ls_dspss_in_lp} \
+-domain PD_DSPSS_PG \
+-lib_cells {LVLSRLHD*}
+
+use_interface_cell ls_dspss_impl_in  -strategy {ls_dspss_in} \
+-domain PD_DSPSS_PG \
+-lib_cells {LVLSRLHD*}
+
+#-------------------------------------------------------------------------------
+# Ports Setting
+#-------------------------------------------------------------------------------
+
+set_port_attributes -ports [find_objects . -pattern * -object_type port -direction in] -driver_supply  SS_MAIN
+set_port_attributes -ports [find_objects . -pattern * -object_type port -direction out] -receiver_supply SS_MAIN
+
+
+#-------------------------------------------------------------------------------
+# Retention Setting
+#-------------------------------------------------------------------------------
+set list_ram_dspss [find_objects . -pattern *TS83*_lib -object_type inst -transitive TRUE]
+
+set matched_elements {}
+foreach item $list_ram_dspss {
+    if {[string match "*u_llram_d*" $item] || [string match "*u_llram_p*" $item] || [string match "*cevax_dmem*" $item] || [string match "*cevax_pmem*u_spram_1024d39w_p_l_TS83CD001_wrap*" $item]} {
+        lappend matched_elements $item
+        puts $item
+        set index [lsearch -exact $list_ram_dspss $item]
+        puts $index
+        if {$index != -1} {
+            puts $index
+            set list_ram_dspss [lreplace $list_ram_dspss $index $index]
+        }
+    }
+}
+
+
+puts  "\n"
+puts  "\n"
+puts  "//////////////////////////////////"
+puts  "// dspss ram list "
+foreach i $list_ram_dspss {puts $i}
+puts  "---------------------------------"
+puts  "\n"
+puts  "//////////////////////////////////"
+puts  "//////////////////////////////////"
+puts  "// dspss retention ram list "
+foreach i $matched_elements {puts $i}
+puts  "---------------------------------"
+puts  "//////////////////////////////////"
+puts  "\n"
+puts  "\n"
+
+foreach mem_i $list_ram_dspss { 
+connect_supply_net VDD_DSP_OFF -ports ${mem_i}/VDDCE
+connect_supply_net VDD_DSP_OFF -ports ${mem_i}/VDDPE
+connect_supply_net VSS         -ports ${mem_i}/VSSE
+}
+
+
+if { $USE_RAM_SIM_MODEL == 1 } {
+foreach mem_i $matched_elements { 
+connect_supply_net VDD_DSP -ports ${mem_i}/VDDCE
+connect_supply_net VDD_DSP -ports ${mem_i}/VDDPE
+connect_supply_net VSS    -ports ${mem_i}/VSSE
+}
+} else {
+foreach mem_i $matched_elements {
+connect_supply_net VDD_DSP -ports ${mem_i}/VDDCE
+connect_supply_net VDD_DSP -ports ${mem_i}/VDDPE
+connect_supply_net VSS    -ports ${mem_i}/VSSE
+connect_supply_net VSS    -ports ${mem_i}/VSS
+}
+}
+
+
+#-------------------------------------------------------------------------------
+# Power State Setting
+#-------------------------------------------------------------------------------
+add_power_state  -supply  SS_MAIN \
+                    -state ON     {-supply_expr {power  == {FULL_ON 0.72} && ground  == {FULL_ON 0.0} } } \
+                    -state OFF    {-supply_expr {power  == {OFF         } && ground  == {FULL_ON 0.0} } }
+
+add_power_state  -supply  SS_DSP \
+                    -state VDDH   {-supply_expr {power  == {FULL_ON 0.81}  && ground  == {FULL_ON 0.0} } } \
+                    -state VDDL   {-supply_expr {power  == {FULL_ON 0.72}  && ground  == {FULL_ON 0.0} } } \
+                    -state OFF    {-supply_expr {power  == {OFF         }  && ground  == {FULL_ON 0.0} } }
+
+add_power_state  -supply  SS_DSPSS \
+                    -state VDDH   {-supply_expr {power == {FULL_ON 0.81}  && ground  == {FULL_ON 0.0} } } \
+                    -state VDDL   {-supply_expr {power == {FULL_ON 0.72}  && ground  == {FULL_ON 0.0} } } \
+                    -state OFF    {-supply_expr {power == {OFF         }  && ground  == {FULL_ON 0.0} } }
+
+################################################################
+################################################################
+
+add_power_state -domain PD_DSPSS \
+                 -state ST1 " -logic_expr { SS_MAIN == ON  && SS_DSP == VDDH && SS_DSPSS == VDDH} " \
+                 -state ST2 " -logic_expr { SS_MAIN == ON  && SS_DSP == VDDL && SS_DSPSS == VDDL} " \
+                 -state ST3 " -logic_expr { SS_MAIN == ON  && SS_DSP == VDDH && SS_DSPSS == OFF } " \
+                 -state ST4 " -logic_expr { SS_MAIN == ON  && SS_DSP == VDDL && SS_DSPSS == OFF } " \
+                 -state ST5 " -logic_expr { SS_MAIN == OFF && SS_DSP == OFF  && SS_DSPSS == OFF } "
