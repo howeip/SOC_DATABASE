@@ -1,0 +1,235 @@
+# -----------------------------------------------------------------------------
+#  Function: This is a top-level upf for a quad CORTEXAP
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Temporary load the sub-upf before pg-lib ready
+# -----------------------------------------------------------------------------
+upf_version 2.1
+#-------------------------------------------------------------------------------
+# Supply Nets and Ports
+#-------------------------------------------------------------------------------
+# VDD_CPU connect PMIC VDD_CPU
+create_supply_port -direction in VDD_MAIN
+create_supply_port -direction in VDD_MDM
+create_supply_port -direction in VSS
+
+create_supply_net VDD_MAIN
+create_supply_net VDD_MDM
+create_supply_net VSS
+
+connect_supply_net VDD_MAIN -ports VDD_MAIN
+connect_supply_net VDD_MDM  -ports VDD_MDM
+connect_supply_net VSS      -ports VSS
+
+create_supply_net VDD_CPUSS
+
+#-------------------------------------------------------------------------------
+# Elements
+#-------------------------------------------------------------------------------
+set CPUSS_hier "u_cpuss_func_top"
+#-------------------------------------------------------------------------------
+# Supply Sets
+#-------------------------------------------------------------------------------
+create_supply_set SS_MAIN    -function {power VDD_MAIN}    -function {ground VSS}
+create_supply_set SS_MDM     -function {power VDD_MDM}     -function {ground VSS}
+create_supply_set SS_CPUSS   -function {power VDD_CPUSS}   -function {ground VSS}
+
+#-------------------------------------------------------------------------------
+# Power Domains
+#-------------------------------------------------------------------------------
+create_power_domain PD_CPUSS    -include_scope \
+                                -supply {primary SS_MAIN}
+
+create_power_domain PD_CPUSS_PG -elements "$CPUSS_hier" \
+                                -supply {primary SS_CPUSS}
+
+#-------------------------------------------------------------------------------
+# Power Switch Setting
+#-------------------------------------------------------------------------------
+
+set pwr_cpu_ss_psw_en    u_cpuss_func_top/pwr_cpu_ss_psw_en
+set pwr_cpu_ss_psw_ack   u_cpuss_func_top/pwr_cpu_ss_psw_ack
+
+create_power_switch psw_PDTOP  -domain PD_CPUSS_PG \
+    -input_supply_port  {TVDD       SS_MDM.power} \
+    -output_supply_port {VDD        SS_CPUSS.power} \
+    -control_port       "NSLEEPIN2  $pwr_cpu_ss_psw_en" \
+    -control_port       "NSLEEPIN1  $pwr_cpu_ss_psw_en" \
+    -on_state           {ON         TVDD {(NSLEEPIN1) && (NSLEEPIN2)}} \
+    -off_state          {OFF        {(!NSLEEPIN1) && (!NSLEEPIN2)}} \
+    -ack_port           "NSLEEPOUT1 $pwr_cpu_ss_psw_ack {NSLEEPIN1 && NSLEEPIN2}"
+
+map_power_switch psw_PDTOP -domain PD_CPUSS_PG -lib_cells {HDRDID*}
+
+
+#-------------------------------------------------------------------------------
+# Isolation Setting
+#-------------------------------------------------------------------------------
+##############cpuss###############
+set CPUSS_clamp1_signal  [ list $CPUSS_hier/core0_core_wfi_mode \
+                                $CPUSS_hier/core0_core_sleep_value \
+                                $CPUSS_hier/cpu_nordpending \
+                                $CPUSS_hier/cpu_nowrpending \
+                                $CPUSS_hier/core0_i0_trace_priv \
+                                $CPUSS_hier/core0_i1_trace_priv \
+                                $CPUSS_hier/core0_i0_trace_cause\[31\] \
+                                $CPUSS_hier/core0_i1_trace_cause\[31\] \
+                                $CPUSS_hier/cpuss_core_clk_ea_status \
+                                $CPUSS_hier/cpuss_for_bus_clk_ea_status \
+                                $CPUSS_hier/cpuss_bus_clk_divider_status\[1\] \
+                                $CPUSS_hier/apb4_d32_dtss_buf_m_pready \
+                         ]
+
+set CPUSS_lp_signal      [ list $CPUSS_hier/pwr_cpu_ss_psw_ack \
+                         ]
+
+set CPUSS_exclude_signal [ concat $CPUSS_clamp1_signal $CPUSS_lp_signal ]
+
+set pwr_cpuss_iso_en  $CPUSS_hier/pwr_cpuss_iso_en
+
+set_isolation iso_cpuss_0 -domain PD_CPUSS_PG \
+     -clamp_value 0 \
+     -applies_to outputs \
+     -exclude_elements "$CPUSS_exclude_signal" \
+     -isolation_signal "$pwr_cpuss_iso_en" \
+     -isolation_sense high \
+     -isolation_supply_set SS_MAIN \
+     -sink SS_MAIN \
+     -location parent \
+     -force_isolation \
+     -name_suffix ISO_CPU_0
+
+set_level_shifter ls_cpuss_out_0 -domain PD_CPUSS_PG \
+     -location parent \
+     -applies_to outputs \
+     -exclude_elements "$CPUSS_exclude_signal" \
+     -sink SS_MAIN \
+     -rule high_to_low \
+     -force_shift
+
+set_isolation iso_cpuss_1 -domain PD_CPUSS_PG \
+     -clamp_value 1 \
+     -applies_to outputs \
+     -elements "$CPUSS_clamp1_signal" \
+     -isolation_signal "$pwr_cpuss_iso_en" \
+     -isolation_sense high \
+     -isolation_supply_set SS_MAIN \
+     -sink SS_MAIN \
+     -location parent \
+     -force_isolation \
+     -name_suffix ISO_CPU_1
+
+set_level_shifter ls_cpuss_out_1 -domain PD_CPUSS_PG \
+     -location parent \
+     -applies_to outputs \
+     -elements "$CPUSS_clamp1_signal" \
+     -sink SS_MAIN \
+     -rule high_to_low \
+     -force_shift
+
+use_interface_cell els_cpuss_impl_0 -strategy {iso_cpuss_0 ls_cpuss_out_0} \
+-domain PD_CPUSS_PG \
+-lib_cells {LVLHLCLOD*}
+
+use_interface_cell els_cpuss_impl_1 -strategy {iso_cpuss_1 ls_cpuss_out_1} \
+-domain PD_CPUSS_PG \
+-lib_cells {LVLHLCD*}
+
+set_level_shifter       lvl_hl_cpu2soc_no_clamp                                 \
+    -domain                 PD_CPUSS_PG                                                \
+    -location               parent                                                  \
+    -sink                   SS_MAIN                                                 \
+    -input_supply_set       SS_MDM                                                  \
+    -output_supply_set      SS_MAIN                                                 \
+    -elements               "$CPUSS_lp_signal"                                \
+    -rule                   high_to_low                                             \
+    -force_shift
+
+use_interface_cell      lvl_hl_cpu2soc_no_clamp_impl                            \
+-domain                 PD_CPUSS_PG                                                \
+-lib_cells              { LVLHLD* }                                             \
+-strategy               { lvl_hl_cpu2soc_no_clamp }
+
+#-------------------------------------------------------------------------------
+# level shifter Setting
+#-------------------------------------------------------------------------------
+set CPUSS_in_lp_signal   [ list $CPUSS_hier/pwr_cpu_ss_psw_en \
+                         ]       
+
+set_level_shifter ls_cpuss_in_lp -domain PD_CPUSS_PG \
+     -location parent \
+     -applies_to inputs \
+     -elements "$CPUSS_in_lp_signal" \
+     -input_supply_set       SS_MAIN \
+     -output_supply_set      SS_MDM \
+     -rule low_to_high \
+     -force_shift
+
+set_level_shifter ls_cpuss_in -domain PD_CPUSS_PG \
+     -location parent \
+     -applies_to inputs \
+     -exclude_elements "$CPUSS_in_lp_signal" \
+     -input_supply_set       SS_MAIN \
+     -output_supply_set      SS_CPUSS \
+     -rule low_to_high \
+     -force_shift
+
+use_interface_cell ls_cpuss_impl_lp -strategy {ls_cpuss_in_lp} \
+-domain PD_CPUSS_PG \
+-lib_cells {LVLSRLHD*}
+
+use_interface_cell ls_cpuss_impl_in     -strategy {ls_cpuss_in} \
+-domain PD_CPUSS_PG \
+-lib_cells {LVLSRLHD*}
+
+
+#-------------------------------------------------------------------------------
+# Ports Setting
+#-------------------------------------------------------------------------------
+set_port_attributes -ports [find_objects . -pattern * -object_type port -direction in]  -driver_supply  SS_MAIN -receiver_supply SS_MAIN
+set_port_attributes -ports [find_objects . -pattern * -object_type port -direction out] -driver_supply  SS_MAIN -receiver_supply SS_MAIN
+
+#-------------------------------------------------------------------------------
+# RAM Setting
+#-------------------------------------------------------------------------------
+
+set list_ram_cpuss [find_objects . -pattern *TS83*_lib -object_type inst -transitive TRUE]
+
+puts  "//////////////////////////////////"
+puts  "// CPUss ram list "
+foreach i $list_ram_cpuss {puts $i}
+puts  "---------------------------------"
+puts  "//////////////////////////////////"
+
+foreach mem_i $list_ram_cpuss { 
+connect_supply_net VDD_CPUSS -ports ${mem_i}/VDDCE
+connect_supply_net VDD_CPUSS -ports ${mem_i}/VDDPE
+connect_supply_net VSS       -ports ${mem_i}/VSSE
+}
+
+#-------------------------------------------------------------------------------
+# Power State Setting
+#-------------------------------------------------------------------------------
+add_power_state  -supply  SS_MAIN \
+                    -state ON     {-supply_expr {power  == {FULL_ON 0.72} && ground  == {FULL_ON 0.0} } } \
+                    -state OFF    {-supply_expr {power  == {OFF         } && ground  == {FULL_ON 0.0} } }
+
+add_power_state  -supply  SS_MDM \
+                    -state VDDH   {-supply_expr {power == {FULL_ON 0.81}  && ground  == {FULL_ON 0.0} } } \
+                    -state VDDL   {-supply_expr {power == {FULL_ON 0.72}  && ground  == {FULL_ON 0.0} } } \
+                    -state OFF    {-supply_expr {power == {OFF         }  && ground  == {FULL_ON 0.0} } }
+
+add_power_state  -supply  SS_CPUSS \
+                    -state VDDH   {-supply_expr {power == {FULL_ON 0.81}  && ground  == {FULL_ON 0.0} } } \
+                    -state VDDL   {-supply_expr {power == {FULL_ON 0.72}  && ground  == {FULL_ON 0.0} } } \
+                    -state OFF    {-supply_expr {power == {OFF         }  && ground  == {FULL_ON 0.0} } }
+
+################################################################
+################################################################
+add_power_state -domain PD_CPUSS \
+                 -state ST1 " -logic_expr { SS_MAIN == ON  && SS_MDM == VDDH && SS_CPUSS == VDDH} " \
+                 -state ST2 " -logic_expr { SS_MAIN == ON  && SS_MDM == VDDL && SS_CPUSS == VDDL} " \
+                 -state ST3 " -logic_expr { SS_MAIN == ON  && SS_MDM == VDDH && SS_CPUSS == OFF } " \
+                 -state ST4 " -logic_expr { SS_MAIN == ON  && SS_MDM == VDDL && SS_CPUSS == OFF } " \
+                 -state ST5 " -logic_expr { SS_MAIN == OFF && SS_MDM == OFF  && SS_CPUSS == OFF } "
