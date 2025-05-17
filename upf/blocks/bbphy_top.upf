@@ -1,0 +1,1574 @@
+# -----------------------------------------------------------------------------
+#  Function: This is a top-level upf for BBPHY TOP
+# -----------------------------------------------------------------------------
+
+upf_version 2.1
+
+set_design_top bb_phy_top
+
+set HDN_UPF $env(HW)/ips/digital/bb_phy/v2/upf/blocks
+
+set TOP_HDN_UPF $env(HW)/ips/digital/bb_phy/v2/upf
+
+source $env(HW)/ips/digital/bb_phy/v2/upf/bb_phy_upf_cfg.tcl
+
+
+set HIER_BBTOP          "bb_phy_dig_inst"
+
+set HIER_CS_Parent      "${HIER_BBTOP}/cs_hd_wrap_inst"
+set HIER_DFF_Parent     "${HIER_BBTOP}/dff_hd_wrap_inst"
+set HIER_MEAS_Parent    "${HIER_BBTOP}/meas_hd_wrap_inst"
+set HIER_PDCS_Parent    "${HIER_BBTOP}/pdcs_hd_wrap_inst"
+set HIER_PDCSB_Parent   "${HIER_BBTOP}/pdcs_hd_wrap_inst/rx_pdcs_top_inst"
+set HIER_PDCSS_Parent   "${HIER_BBTOP}/pdcs_hd_wrap_inst/rx_pdcs_top_inst"
+set HIER_UL_Parent      "${HIER_BBTOP}/ul_hd_wrap_inst"
+
+set HIER_CS             "${HIER_CS_Parent}/cs_hd_top_inst"
+set HIER_DFF            "${HIER_DFF_Parent}/dff_hd_top_inst"
+set HIER_AFE            "${HIER_DFF}/afe_hd_wrap_inst/afe_ana_wrap_inst/afe_top_2tx_inst"
+set HIER_MEAS           "${HIER_MEAS_Parent}/meas_hd_top_inst"
+set HIER_PDCSB          "${HIER_PDCSB_Parent}/pdcsb_hd_top_inst"
+set HIER_PDCSS          "${HIER_PDCSS_Parent}/pdcss_hd_top_inst"
+set HIER_UL             "${HIER_UL_Parent}/ul_hd_top_inst"
+set HIER_TPU            "${HIER_BBTOP}/tpu_wrap_inst"
+
+
+set top_analog_port                     [find_objects .             -pattern AFE*   -object_type port]
+set dig_analog_port                     [find_objects $HIER_BBTOP   -pattern AFE*   -object_type port]
+
+#-------------------------------------------------------------------------------
+# Supply Nets, Ports and Sets
+#-------------------------------------------------------------------------------
+
+# afe pll power pin
+create_supply_net   AFE_AVDD12_PLL_VCO
+create_supply_port  AFE_AVDD12_PLL_VCO  -direction  in
+connect_supply_net  AFE_AVDD12_PLL_VCO  -ports      AFE_AVDD12_PLL_VCO
+
+create_supply_net   AFE_AVSS_PLL_VCO
+create_supply_port  AFE_AVSS_PLL_VCO    -direction  in
+connect_supply_net  AFE_AVSS_PLL_VCO    -ports      AFE_AVSS_PLL_VCO
+
+create_supply_net   AFE_AVDD09_PLL_MMD
+create_supply_port  AFE_AVDD09_PLL_MMD  -direction  in
+connect_supply_net  AFE_AVDD09_PLL_MMD  -ports      AFE_AVDD09_PLL_MMD
+
+create_supply_net   AFE_AVSS_PLL_MMD
+create_supply_port  AFE_AVSS_PLL_MMD    -direction  in
+connect_supply_net  AFE_AVSS_PLL_MMD    -ports      AFE_AVSS_PLL_MMD
+
+create_supply_net   AFE_AVDD09_PLL_CP
+create_supply_port  AFE_AVDD09_PLL_CP   -direction  in
+connect_supply_net  AFE_AVDD09_PLL_CP   -ports      AFE_AVDD09_PLL_CP
+
+create_supply_net   AFE_AVSS_PLL_CP
+create_supply_port  AFE_AVSS_PLL_CP     -direction  in
+connect_supply_net  AFE_AVSS_PLL_CP     -ports      AFE_AVSS_PLL_CP
+
+
+# afe prxadc power pin
+create_supply_net   AFE_AVDD12_PRXADC
+create_supply_port  AFE_AVDD12_PRXADC   -direction  in
+connect_supply_net  AFE_AVDD12_PRXADC   -ports      AFE_AVDD12_PRXADC
+
+create_supply_net   AFE_DVDD09_PRXADC
+create_supply_port  AFE_DVDD09_PRXADC   -direction  in
+connect_supply_net  AFE_DVDD09_PRXADC   -ports      AFE_DVDD09_PRXADC
+
+create_supply_net   AFE_AVSS_PRXADC
+create_supply_port  AFE_AVSS_PRXADC     -direction  in
+connect_supply_net  AFE_AVSS_PRXADC     -ports      AFE_AVSS_PRXADC
+
+create_supply_net   AFE_DVSS_PRXADC
+create_supply_port  AFE_DVSS_PRXADC     -direction  in
+connect_supply_net  AFE_DVSS_PRXADC     -ports      AFE_DVSS_PRXADC
+
+
+# afe drxadc power pin
+create_supply_net   AFE_AVDD12_DRXADC
+create_supply_port  AFE_AVDD12_DRXADC   -direction  in
+connect_supply_net  AFE_AVDD12_DRXADC   -ports      AFE_AVDD12_DRXADC
+
+create_supply_net   AFE_DVDD09_DRXADC
+create_supply_port  AFE_DVDD09_DRXADC   -direction  in
+connect_supply_net  AFE_DVDD09_DRXADC   -ports      AFE_DVDD09_DRXADC
+
+create_supply_net   AFE_AVSS_DRXADC
+create_supply_port  AFE_AVSS_DRXADC     -direction  in
+connect_supply_net  AFE_AVSS_DRXADC     -ports      AFE_AVSS_DRXADC
+
+create_supply_net   AFE_DVSS_DRXADC
+create_supply_port  AFE_DVSS_DRXADC     -direction  in
+connect_supply_net  AFE_DVSS_DRXADC     -ports      AFE_DVSS_DRXADC
+
+
+# afe orxadc power pin
+create_supply_net   AFE_AVDD12_ORXADC
+create_supply_port  AFE_AVDD12_ORXADC   -direction  in
+connect_supply_net  AFE_AVDD12_ORXADC   -ports      AFE_AVDD12_ORXADC
+
+create_supply_net   AFE_DVDD09_ORXADC
+create_supply_port  AFE_DVDD09_ORXADC   -direction  in
+connect_supply_net  AFE_DVDD09_ORXADC   -ports      AFE_DVDD09_ORXADC
+
+create_supply_net   AFE_AVSS_ORXADC
+create_supply_port  AFE_AVSS_ORXADC     -direction  in
+connect_supply_net  AFE_AVSS_ORXADC     -ports      AFE_AVSS_ORXADC
+
+create_supply_net   AFE_DVSS_ORXADC
+create_supply_port  AFE_DVSS_ORXADC     -direction  in
+connect_supply_net  AFE_DVSS_ORXADC     -ports      AFE_DVSS_ORXADC
+
+create_supply_net   AFE_AVDD18_TXDAC1
+create_supply_port  AFE_AVDD18_TXDAC1   -direction  in
+connect_supply_net  AFE_AVDD18_TXDAC1   -ports      AFE_AVDD18_TXDAC1
+
+
+# afe txdac1 power pin
+create_supply_net   AFE_AVDD12_TXDAC1
+create_supply_port  AFE_AVDD12_TXDAC1   -direction  in
+connect_supply_net  AFE_AVDD12_TXDAC1   -ports      AFE_AVDD12_TXDAC1
+
+create_supply_net   AFE_DVDD09_TXDAC1
+create_supply_port  AFE_DVDD09_TXDAC1   -direction  in
+connect_supply_net  AFE_DVDD09_TXDAC1   -ports      AFE_DVDD09_TXDAC1
+
+create_supply_net   AFE_AVSS_TXDAC1
+create_supply_port  AFE_AVSS_TXDAC1     -direction  in
+connect_supply_net  AFE_AVSS_TXDAC1     -ports      AFE_AVSS_TXDAC1
+
+create_supply_net   AFE_DVSS_TXDAC1
+create_supply_port  AFE_DVSS_TXDAC1     -direction  in
+connect_supply_net  AFE_DVSS_TXDAC1     -ports      AFE_DVSS_TXDAC1
+
+
+# afe txdac2 power pin
+create_supply_net   AFE_AVDD18_TXDAC2
+create_supply_port  AFE_AVDD18_TXDAC2   -direction  in
+connect_supply_net  AFE_AVDD18_TXDAC2   -ports      AFE_AVDD18_TXDAC2
+
+create_supply_net   AFE_AVDD12_TXDAC2
+create_supply_port  AFE_AVDD12_TXDAC2   -direction  in
+connect_supply_net  AFE_AVDD12_TXDAC2   -ports      AFE_AVDD12_TXDAC2
+
+create_supply_net   AFE_DVDD09_TXDAC2
+create_supply_port  AFE_DVDD09_TXDAC2   -direction  in
+connect_supply_net  AFE_DVDD09_TXDAC2   -ports      AFE_DVDD09_TXDAC2
+
+create_supply_net   AFE_AVSS_TXDAC2
+create_supply_port  AFE_AVSS_TXDAC2     -direction  in
+connect_supply_net  AFE_AVSS_TXDAC2     -ports      AFE_AVSS_TXDAC2
+
+create_supply_net   AFE_DVSS_TXDAC2
+create_supply_port  AFE_DVSS_TXDAC2     -direction  in
+connect_supply_net  AFE_DVSS_TXDAC2     -ports      AFE_DVSS_TXDAC2
+
+
+# afe auxdac power pin
+create_supply_net   AFE_AVDD18_AUXDAC
+create_supply_port  AFE_AVDD18_AUXDAC   -direction  in
+connect_supply_net  AFE_AVDD18_AUXDAC   -ports      AFE_AVDD18_AUXDAC
+
+create_supply_net   AFE_AVSS_18AUXDAC
+create_supply_port  AFE_AVSS_18AUXDAC   -direction  in
+connect_supply_net  AFE_AVSS_18AUXDAC   -ports      AFE_AVSS_18AUXDAC
+
+
+
+# afe pmu power pin
+create_supply_net   AFE_AVDD18_PMU
+create_supply_port  AFE_AVDD18_PMU      -direction  in
+connect_supply_net  AFE_AVDD18_PMU      -ports      AFE_AVDD18_PMU
+
+create_supply_net   AFE_AVSS_PMU
+create_supply_port  AFE_AVSS_PMU        -direction  in
+connect_supply_net  AFE_AVSS_PMU        -ports      AFE_AVSS_PMU
+
+
+# afe ckbuf power pin
+create_supply_net   AFE_AVDD09_CKBUF
+create_supply_port  AFE_AVDD09_CKBUF    -direction  in
+connect_supply_net  AFE_AVDD09_CKBUF    -ports      AFE_AVDD09_CKBUF
+
+create_supply_net   AFE_AVSS_CKBUF
+create_supply_port  AFE_AVSS_CKBUF      -direction  in
+connect_supply_net  AFE_AVSS_CKBUF      -ports      AFE_AVSS_CKBUF
+
+
+# digital power pin
+create_supply_net   VDD_MAIN
+create_supply_port  VDD_MAIN            -direction  in
+connect_supply_net  VDD_MAIN            -ports      VDD_MAIN
+
+create_supply_net   VDD_MDM
+create_supply_port  VDD_MDM             -direction  in
+connect_supply_net  VDD_MDM             -ports      VDD_MDM
+
+create_supply_net   VSS
+create_supply_port  VSS                 -direction  in 
+connect_supply_net  VSS                 -ports      VSS
+
+# create bbtop supply net
+create_supply_net   VDD_BBTOP
+
+#---------------------------------------
+# supply set
+#---------------------------------------
+
+create_supply_set   SS_MAIN \
+-function       {   power   VDD_MAIN            } \
+-function       {   ground  VSS                 }
+
+create_supply_set   SS_MDM \
+-function       {   power   VDD_MDM             } \
+-function       {   ground  VSS                 }
+
+create_supply_set   SS_BBTOP \
+-function       {   power   VDD_BBTOP           } \
+-function       {   ground  VSS                 }
+
+# swap AFE_AVSS_PLL_CP with AFE_AVSS_PLL_VCO to avaoid CLP error
+create_supply_set   SS_AFE_AVDD12_PLL_VCO \
+-function       {   power   AFE_AVDD12_PLL_VCO  } \
+-function       {   ground  AFE_AVSS_PLL_CP     }
+
+create_supply_set   SS_AFE_AVDD09_PLL_MMD \
+-function       {   power   AFE_AVDD09_PLL_MMD  } \
+-function       {   ground  AFE_AVSS_PLL_MMD    }
+
+create_supply_set   SS_AFE_AVDD09_PLL_CP \
+-function       {   power   AFE_AVDD09_PLL_CP   } \
+-function       {   ground  AFE_AVSS_PLL_VCO    }
+
+create_supply_set   SS_AFE_AVDD12_PRXADC \
+-function       {   power   AFE_AVDD12_PRXADC   } \
+-function       {   ground  AFE_AVSS_PRXADC     }
+
+create_supply_set   SS_AFE_DVDD09_PRXADC \
+-function       {   power   AFE_DVDD09_PRXADC   } \
+-function       {   ground  AFE_DVSS_PRXADC     }
+
+create_supply_set   SS_AFE_AVDD12_DRXADC \
+-function       {   power   AFE_AVDD12_DRXADC   } \
+-function       {   ground  AFE_AVSS_DRXADC     }
+
+create_supply_set   SS_AFE_DVDD09_DRXADC \
+-function       {   power   AFE_DVDD09_DRXADC   } \
+-function       {   ground  AFE_DVSS_DRXADC     }
+
+create_supply_set   SS_AFE_AVDD12_ORXADC \
+-function       {   power   AFE_AVDD12_ORXADC   } \
+-function       {   ground  AFE_AVSS_ORXADC     }
+
+create_supply_set   SS_AFE_DVDD09_ORXADC \
+-function       {   power   AFE_DVDD09_ORXADC   } \
+-function       {   ground  AFE_DVSS_ORXADC     }
+
+create_supply_set   SS_AFE_AVDD18_TXDAC1 \
+-function       {   power   AFE_AVDD18_TXDAC1   } \
+-function       {   ground  AFE_AVSS_TXDAC1     }
+
+create_supply_set   SS_AFE_AVDD12_TXDAC1 \
+-function       {   power   AFE_AVDD12_TXDAC1   } \
+-function       {   ground  AFE_AVSS_TXDAC1     }
+
+create_supply_set   SS_AFE_DVDD09_TXDAC1 \
+-function       {   power   AFE_DVDD09_TXDAC1   } \
+-function       {   ground  AFE_DVSS_TXDAC1     }
+
+create_supply_set   SS_AFE_AVDD18_TXDAC2 \
+-function       {   power   AFE_AVDD18_TXDAC2   } \
+-function       {   ground  AFE_AVSS_TXDAC2     }
+
+create_supply_set   SS_AFE_AVDD12_TXDAC2 \
+-function       {   power   AFE_AVDD12_TXDAC2   } \
+-function       {   ground  AFE_AVSS_TXDAC2     }
+
+create_supply_set   SS_AFE_DVDD09_TXDAC2 \
+-function       {   power   AFE_DVDD09_TXDAC2   } \
+-function       {   ground  AFE_DVSS_TXDAC2     }
+
+create_supply_set   SS_AFE_AVDD18_AUXDAC \
+-function       {   power   AFE_AVDD18_AUXDAC   } \
+-function       {   ground  AFE_AVSS_18AUXDAC   }
+
+create_supply_set   SS_AFE_AVDD18_PMU \
+-function       {   power   AFE_AVDD18_PMU      } \
+-function       {   ground  AFE_AVSS_PMU        }
+
+create_supply_set   SS_AFE_AVDD09_CKBUF \
+-function       {   power   AFE_AVDD09_CKBUF    } \
+-function       {   ground  AFE_AVSS_CKBUF      }
+
+if { $BBPHY_HDN_MACRO == 1 } {
+
+create_supply_net   VDD_CS
+create_supply_net   VDD_DFF
+create_supply_net   VDD_MEAS
+create_supply_net   VDD_PDCSB
+create_supply_net   VDD_PDCSS
+create_supply_net   VDD_UL
+
+puts "hierarchy mode, create and conncet supply net"
+create_supply_set   SS_CS_PG            -function "power VDD_CS"        -function "ground VSS"
+create_supply_set   SS_DFF_PG           -function "power VDD_DFF"       -function "ground VSS"
+create_supply_set   SS_MEAS_PG          -function "power VDD_MEAS"      -function "ground VSS"
+create_supply_set   SS_PDCSB_PG         -function "power VDD_PDCSB"     -function "ground VSS"
+create_supply_set   SS_PDCSS_PG         -function "power VDD_PDCSS"     -function "ground VSS"
+create_supply_set   SS_UL_PG            -function "power VDD_UL"        -function "ground VSS"
+
+} else {
+
+puts "flatten mode, upf is loaded!"
+load_upf            -scope $HIER_CS     $HDN_UPF/cs.upf
+load_upf            -scope $HIER_DFF    $HDN_UPF/dff.upf
+load_upf            -scope $HIER_MEAS   $HDN_UPF/meas.upf
+load_upf            -scope $HIER_PDCSB  $HDN_UPF/pdcsb.upf
+load_upf            -scope $HIER_PDCSS  $HDN_UPF/pdcss.upf
+load_upf            -scope $HIER_UL     $HDN_UPF/ul.upf
+
+}
+
+
+
+#-------------------------------------------------------------------------------
+# Power Domains
+#-------------------------------------------------------------------------------
+
+if { $BBPHY_HDN_MACRO == 1 } {
+
+puts "hierarchy mode, create power domain"
+create_power_domain PD_CS               -elements "$HIER_CS"        -supply "primary SS_CS_PG"
+create_power_domain PD_DFF              -elements "$HIER_DFF"       -supply "primary SS_DFF_PG"
+create_power_domain PD_MEAS             -elements "$HIER_MEAS"      -supply "primary SS_MEAS_PG"
+create_power_domain PD_PDCSS            -elements "$HIER_PDCSS"     -supply "primary SS_PDCSS_PG"
+create_power_domain PD_PDCSB            -elements "$HIER_PDCSB"     -supply "primary SS_PDCSB_PG"
+create_power_domain PD_UL               -elements "$HIER_UL"        -supply "primary SS_UL_PG"
+
+} else {
+
+puts "the flat power domain is loaded through block upf!"
+
+}
+
+create_power_domain                         PD_BBTOP                      \
+                -elements               {   bb_phy_dig_inst             } \
+                -supply                 {   primary SS_BBTOP            } \
+                -available_supplies     {   SS_MAIN SS_MDM SS_BBTOP     }
+
+create_power_domain                         PD_BBPHY                      \
+                -elements               {   .                           } \
+                -exclude_elements       {   bb_phy_dig_inst             } \
+                -supply                 {   primary SS_MAIN             } \
+                -supply                 {   default_isolation SS_MAIN   } \
+                -available_supplies     {   SS_MAIN SS_MDM SS_BBTOP     }
+
+
+
+
+#-------------------------------------------------------------------------------
+# Power Switch Setting
+#-------------------------------------------------------------------------------
+
+# This is an example how power switch should be connected
+# create_logic_net        top_psw_n1
+# create_power_switch     PSW_BBTOP \
+# -domain                 PD_BBTOP \
+# -input_supply_port  {   TVDD        SS_MDM.power                            } \
+# -output_supply_port {   VDD         SS_BBTOP.power                          } \
+# -control_port       {   NSLEEPIN1   top_psw_n1                              } \
+# -control_port       {   NSLEEPIN2   top_psw_en                              } \
+# -ack_port           {   NSLEEPOUT1  top_psw_ack     NSLEEPIN1               } \
+# -ack_port           {   NSLEEPOUT2  top_psw_n1      NSLEEPIN2               } \
+# -on_state           {   ON          TVDD    {NSLEEPIN1 && NSLEEPIN2}        } \
+# -off_state          {   OFF                 {(!NSLEEPIN1) && (!NSLEEPIN2)}  }
+
+create_power_switch     PSW_BBTOP                                               \
+-domain                 PD_BBTOP                                                \
+-input_supply_port  {   TVDD        SS_MDM.power                            }   \
+-output_supply_port {   VDD         SS_BBTOP.power                          }   \
+-control_port       {   NSLEEPIN1   bb_phy_dig_inst/top_psw_en              }   \
+-control_port       {   NSLEEPIN2   bb_phy_dig_inst/top_psw_en              }   \
+-ack_port           {   NSLEEPOUT1  bb_phy_dig_inst/top_psw_ack {NSLEEPIN1 && NSLEEPIN2}    }   \
+-on_state           {   ON          TVDD        {NSLEEPIN1 && NSLEEPIN2}    }   \
+-off_state          {   OFF         {(!NSLEEPIN1) && (!NSLEEPIN2)}          }
+
+map_power_switch        PSW_BBTOP \
+-domain                 PD_BBTOP \
+-lib_cells          {   HDRDID2BWP7T40P140HVT   }
+
+
+
+
+
+
+
+
+#-------------------------------------------------------------------------------
+# Retention Setting
+#-------------------------------------------------------------------------------
+# None
+
+
+
+
+#-------------------------------------------------------------------------------
+# levelshifter & Isolation Setting
+#-------------------------------------------------------------------------------
+set list_bbdig_i_lvl                                    [find_objects "bb_phy_dig_inst" -pattern *          -object_type port -direction in]
+set list_bbdig_i_exc                                    $dig_analog_port
+set list_bbdig_i_exc        [concat $list_bbdig_i_exc   [find_objects "bb_phy_dig_inst" -pattern *_psw_*    -object_type port -direction in]]
+set list_bbdig_i_psw                                    [find_objects "bb_phy_dig_inst" -pattern *_psw_*    -object_type port -direction in]
+
+foreach i $list_bbdig_i_exc {
+set idx                     [lsearch -exact $list_bbdig_i_lvl "$i"         ]
+set list_bbdig_i_lvl        [lreplace       $list_bbdig_i_lvl "$idx" "$idx"]
+}
+
+if { $DBG_TOP_ONLY == 1 } {
+puts  "/////////////////////////////////"
+puts  "// list_bbdig_i_exc"
+foreach i $list_bbdig_i_exc     {puts $i}
+puts  "---------------------------------"
+puts  "// list_bbdig_i_lvl"
+foreach i $list_bbdig_i_lvl     {puts $i}
+puts  "---------------------------------"
+puts  "// list_bbdig_i_psw"
+foreach i $list_bbdig_i_psw     {puts $i}
+puts  "/////////////////////////////////"
+puts  "\n"
+}
+
+set_level_shifter                       lvl_lh_soc2bby_no_clamp                 \
+                -domain                 PD_BBTOP                                \
+                -location               parent                                  \
+                -source                 SS_MAIN                                 \
+                -elements               "$list_bbdig_i_lvl"                     \
+                -input_supply_set       SS_MAIN                                 \
+                -output_supply_set      SS_BBTOP                                \
+                -rule                   low_to_high                             \
+                -force_shift
+use_interface_cell                      lvl_lh_soc2bby_no_clamp_impl            \
+                -domain                 PD_BBTOP                                \
+                -lib_cells              { LVLSRLHD* }                           \
+                -strategy               { lvl_lh_soc2bby_no_clamp }
+
+set_level_shifter                       lvl_lh_soc2mdm_no_clamp                 \
+                -domain                 PD_BBTOP                                \
+                -location               parent                                  \
+                -source                 SS_MAIN                                 \
+                -elements               "$list_bbdig_i_psw"                     \
+                -input_supply_set       SS_MAIN                                 \
+                -output_supply_set      SS_MDM                                  \
+                -rule                   low_to_high                             \
+                -force_shift
+use_interface_cell                      lvl_lh_soc2mdm_no_clamp_impl            \
+                -domain                 PD_BBTOP                                \
+                -lib_cells              { LVLSRLHD* }                           \
+                -strategy               { lvl_lh_soc2mdm_no_clamp }
+
+
+
+set list_bbdig_o_all                                    [find_objects "bb_phy_dig_inst" -pattern *          -object_type port -direction out]
+set list_bbdig_o_exc                                    $dig_analog_port
+set list_bbdig_o_exc        [concat $list_bbdig_o_exc   [find_objects "bb_phy_dig_inst" -pattern *ref_clk   -object_type port -direction out]]
+set list_bbdig_o_exc        [concat $list_bbdig_o_exc   [find_objects "bb_phy_dig_inst" -pattern *_psw_*    -object_type port -direction out]]
+
+foreach i $list_bbdig_o_exc {
+set idx                     [lsearch -exact $list_bbdig_o_all "$i"         ]
+set list_bbdig_o_all        [lreplace       $list_bbdig_o_all "$idx" "$idx"]
+}
+
+set list_bbdig_o_clamp1                                 [find_objects "bb_phy_dig_inst" -pattern *noc_idle* -object_type port -direction out]
+set list_bbdig_o_clamp0     $list_bbdig_o_all
+foreach i $list_bbdig_o_clamp1 {
+set idx                     [lsearch -exact $list_bbdig_o_clamp0 "$i"         ]
+set list_bbdig_o_clamp0     [lreplace       $list_bbdig_o_clamp0 "$idx" "$idx"]
+}
+
+set list_bbdig_o_no_clamp                                   [find_objects "bb_phy_dig_inst" -pattern *ref_clk   -object_type port -direction out]
+set list_bbdig_o_no_clamp   [concat $list_bbdig_o_no_clamp  [find_objects "bb_phy_dig_inst" -pattern *_psw_*    -object_type port -direction out]]
+
+if { $DBG_TOP_ONLY == 1 } {
+puts  "/////////////////////////////////"
+puts  "// list_bbdig_o_exc"
+foreach i $list_bbdig_o_exc  {puts $i}
+puts  "---------------------------------"
+puts  "// list_bbdig_o_clamp0"
+foreach i $list_bbdig_o_clamp0   {puts $i}
+puts  "---------------------------------"
+puts  "// list_bbdig_o_clamp1"
+foreach i $list_bbdig_o_clamp1   {puts $i}
+puts  "---------------------------------"
+puts  "// list_bbdig_o_no_clamp"
+foreach i $list_bbdig_o_no_clamp   {puts $i}
+puts  "/////////////////////////////////"
+puts  "\n"
+}
+
+set_level_shifter       lvl_hl_bby2soc_clamp0                                   \
+-domain                 PD_BBTOP                                                \
+-location               parent                                                  \
+-sink                   SS_MAIN                                                 \
+-elements               "$list_bbdig_o_clamp0"                                  \
+-rule                   high_to_low                                             \
+-force_shift
+set_isolation           iso_hl_bby2soc_clamp0                                   \
+-domain                 PD_BBTOP                                                \
+-location               parent                                                  \
+-clamp_value            0                                                       \
+-elements               "$list_bbdig_o_clamp0"                                  \
+-sink                   SS_MAIN                                                 \
+-isolation_signal       "top_iso_en"                                            \
+-isolation_sense        low                                                     \
+-isolation_supply_set   SS_MAIN                                                 \
+-force_isolation
+use_interface_cell      els_hl_bby2soc_clamp0_impl                              \
+-domain                 PD_BBTOP                                                \
+-lib_cells              { LVLHLCLOD* }                                          \
+-strategy               { lvl_hl_bby2soc_clamp0 iso_hl_bby2soc_clamp0 }
+
+
+set_level_shifter       lvl_hl_bby2soc_clamp1                                   \
+-domain                 PD_BBTOP                                                \
+-location               parent                                                  \
+-sink                   SS_MAIN                                                 \
+-elements               "$list_bbdig_o_clamp1"                                  \
+-rule                   high_to_low                                             \
+-force_shift
+set_isolation           iso_hl_bby2soc_clamp1                                   \
+-domain                 PD_BBTOP                                                \
+-location               parent                                                  \
+-clamp_value            1                                                       \
+-elements               "$list_bbdig_o_clamp1"                                  \
+-sink                   SS_MAIN                                                 \
+-isolation_signal       "top_iso_en"                                            \
+-isolation_sense        low                                                     \
+-isolation_supply_set   SS_MAIN                                                 \
+-force_isolation
+use_interface_cell      els_hl_bby2soc_clamp1_impl                              \
+-domain                 PD_BBTOP                                                \
+-lib_cells              { LVLHLCD* }                                            \
+-strategy               { lvl_hl_bby2soc_clamp1 iso_hl_bby2soc_clamp1 }
+
+
+set_level_shifter       lvl_hl_bby2soc_no_clamp                                 \
+-domain                 PD_BBTOP                                                \
+-location               parent                                                  \
+-sink                   SS_MAIN                                                 \
+-input_supply_set       SS_MDM                                                  \
+-output_supply_set      SS_MAIN                                                 \
+-elements               "$list_bbdig_o_no_clamp"                                \
+-rule                   high_to_low                                             \
+-force_shift
+use_interface_cell      lvl_hl_bby2soc_no_clamp_impl                            \
+-domain                 PD_BBTOP                                                \
+-lib_cells              { LVLHLD* }                                             \
+-strategy               { lvl_hl_bby2soc_no_clamp }
+
+
+#---------------------------------------
+# harden isolation
+#---------------------------------------
+
+if { $BBPHY_HDN_MACRO == 1 } {
+
+set ISO_PD_CS       "PD_CS"
+set ISO_PD_DFF      "PD_DFF"
+set ISO_PD_MEAS     "PD_MEAS"
+set ISO_PD_PDCSS    "PD_PDCSS"
+set ISO_PD_PDCSB    "PD_PDCSB"
+set ISO_PD_UL       "PD_UL"
+
+} else {
+
+set ISO_PD_CS       "$HIER_CS/PD_CS"
+set ISO_PD_DFF      "$HIER_DFF/PD_DFF"
+set ISO_PD_MEAS     "$HIER_MEAS/PD_MEAS"
+set ISO_PD_PDCSS    "$HIER_PDCSS/PD_PDCSS"
+set ISO_PD_PDCSB    "$HIER_PDCSB/PD_PDCSB"
+set ISO_PD_UL       "$HIER_UL/PD_UL"
+
+}
+
+
+
+#---------------
+# cs
+#---------------
+set list_cs_output_all                                          [find_objects $HIER_CS      -pattern *                  -object_type port -direction out]
+set list_cs_iso_exc                                             [find_objects $HIER_CS      -pattern *_psw_*            -object_type port -direction out]
+
+set list_cs_iso_clamp0  $list_cs_output_all
+
+foreach i $list_cs_iso_exc {
+set idx                     [lsearch -exact $list_cs_iso_clamp0     "$i"         ]
+set list_cs_iso_clamp0      [lreplace       $list_cs_iso_clamp0     "$idx" "$idx"]
+}
+
+set list_cs_iso_clamp1                                          [find_objects $HIER_CS      -pattern *_hreadyout*       -object_type port -direction out]
+set list_cs_iso_clamp1      [concat     $list_cs_iso_clamp1     [find_objects $HIER_CS      -pattern *_pd_Idle*         -object_type port -direction out]]
+
+foreach i $list_cs_iso_clamp1 {
+set idx                     [lsearch -exact $list_cs_iso_clamp0     "$i"         ]
+set list_cs_iso_clamp0      [lreplace       $list_cs_iso_clamp0     "$idx" "$idx"]
+}
+
+if { $DBG_TOP_CS == 1 } {
+puts  "/////////////////////////////////"
+puts  "// list_cs_iso_exc"
+foreach i $list_cs_iso_exc      {puts $i}
+puts  "---------------------------------"
+puts  "// list_cs_iso_clamp0"
+foreach i $list_cs_iso_clamp0   {puts $i}
+puts  "---------------------------------"
+puts  "// list_cs_iso_clamp1"
+foreach i $list_cs_iso_clamp1   {puts $i}
+puts  "/////////////////////////////////"
+puts  "\n"
+}
+
+
+set_isolation iso_o_cs2bbtop_clamp0 \
+                -domain                 $ISO_PD_CS \
+                -location               parent \
+                -elements               " $list_cs_iso_clamp0 " \
+                -clamp_value            0 \
+                -isolation_signal       $HIER_CS_Parent/cs_iso_en \
+                -isolation_sense        high \
+                -isolation_supply       SS_BBTOP \
+                -force_isolation
+
+set_isolation iso_o_cs2bbtop_clamp1 \
+                -domain                 $ISO_PD_CS \
+                -location               parent \
+                -elements               " $list_cs_iso_clamp1 " \
+                -clamp_value            1 \
+                -isolation_signal       $HIER_CS_Parent/cs_iso_en \
+                -isolation_sense        high \
+                -isolation_supply       SS_BBTOP \
+                -force_isolation
+
+use_interface_cell iso_o_cs2bbtop_clamp0_impl \
+                -domain                 $ISO_PD_CS \
+                -strategy               { iso_o_cs2bbtop_clamp0 } \
+                -lib_cells              { ISOLOD* }
+
+use_interface_cell iso_o_cs2bbtop_clamp1_impl \
+                -domain                 $ISO_PD_CS \
+                -strategy               { iso_o_cs2bbtop_clamp1 } \
+                -lib_cells              { ISOHID* }
+
+
+#---------------
+# dff
+#---------------
+
+set list_dff_output_all                                         [find_objects $HIER_DFF     -pattern *                  -object_type port -direction out]
+set list_dff_afe_port                                           [find_objects $HIER_DFF     -pattern AFE*               -object_type port]
+
+# to soc
+set list_dff_iso_exc                                            [find_objects $HIER_DFF     -pattern *_psw_*            -object_type port -direction out]
+set list_dff_iso_exc        [concat     $list_dff_iso_exc       [find_objects $HIER_DFF     -pattern *ref_clk           -object_type port -direction out]]
+
+# to pdcss
+set list_dff_iso_exc        [concat     $list_dff_iso_exc       [find_objects $HIER_DFF     -pattern ch0_ram_rd_*       -object_type port -direction out]]
+set list_dff_iso_exc        [concat     $list_dff_iso_exc       [find_objects $HIER_DFF     -pattern ch1_ram_rd_*       -object_type port -direction out]]
+set list_dff_iso_exc        [concat     $list_dff_iso_exc       [find_objects $HIER_DFF     -pattern debug_pdcss*       -object_type port -direction out]]
+
+# to ul
+# dff_dac* all inputs
+set list_dff_iso_exc        [concat     $list_dff_iso_exc       [find_objects $HIER_DFF     -pattern dff_orx*           -object_type port -direction out]]
+set list_dff_iso_exc        [concat     $list_dff_iso_exc       [find_objects $HIER_DFF     -pattern dpd_ram*           -object_type port -direction out]]
+set list_dff_iso_exc        [concat     $list_dff_iso_exc       [find_objects $HIER_DFF     -pattern debug_ul*          -object_type port -direction out]]
+
+# exclude analog ports
+set list_dff_iso_exc        [concat     $list_dff_iso_exc       $list_dff_afe_port ]
+
+set list_dff_iso_clamp0  $list_dff_output_all
+
+foreach i $list_dff_iso_exc {
+set idx                     [lsearch -exact $list_dff_iso_clamp0    "$i"         ]
+set list_dff_iso_clamp0     [lreplace       $list_dff_iso_clamp0    "$idx" "$idx"]
+}
+
+
+set list_dff_iso_clamp1                                         [find_objects $HIER_DFF     -pattern *_hreadyout*       -object_type port -direction out]
+set list_dff_iso_clamp1     [concat     $list_dff_iso_clamp1    [find_objects $HIER_DFF     -pattern *_pd_Idle*         -object_type port -direction out]]
+
+
+foreach i $list_dff_iso_clamp1 {
+set idx                     [lsearch -exact $list_dff_iso_clamp0    "$i"         ]
+set list_dff_iso_clamp0     [lreplace       $list_dff_iso_clamp0    "$idx" "$idx"]
+}
+
+if { $DBG_TOP_DFF == 1 } {
+puts  "/////////////////////////////////"
+puts  "// list_dff_iso_exc"
+foreach i $list_dff_iso_exc     {puts $i}
+puts  "---------------------------------"
+puts  "// list_dff_iso_clamp0"
+foreach i $list_dff_iso_clamp0  {puts $i}
+puts  "---------------------------------"
+puts  "// list_dff_iso_clamp1"
+foreach i $list_dff_iso_clamp1  {puts $i}
+puts  "/////////////////////////////////"
+puts  "\n"
+}
+
+set_isolation iso_o_dff2bbtop_clamp0 \
+                -domain                 $ISO_PD_DFF \
+                -location               parent \
+                -elements               " $list_dff_iso_clamp0 " \
+                -clamp_value            0 \
+                -isolation_signal       $HIER_DFF_Parent/dff_iso_en \
+                -isolation_sense        high \
+                -isolation_supply       SS_BBTOP \
+                -force_isolation
+
+set_isolation iso_o_dff2bbtop_clamp1 \
+                -domain                 $ISO_PD_DFF \
+                -location               parent \
+                -elements               " $list_dff_iso_clamp1 " \
+                -clamp_value            1 \
+                -isolation_signal       $HIER_DFF_Parent/dff_iso_en \
+                -isolation_sense        high \
+                -isolation_supply       SS_BBTOP \
+                -force_isolation
+
+use_interface_cell iso_o_dff2bbtop_clamp0_impl \
+                -domain                 $ISO_PD_DFF \
+                -strategy               { iso_o_dff2bbtop_clamp0 } \
+                -lib_cells              { ISOLOD* }
+
+use_interface_cell iso_o_dff2bbtop_clamp1_impl \
+                -domain                 $ISO_PD_DFF \
+                -strategy               { iso_o_dff2bbtop_clamp1 } \
+                -lib_cells              { ISOHID* }
+
+
+
+#---------------
+# meas
+#---------------
+
+set list_meas_output_all                                        [find_objects $HIER_MEAS    -pattern *                  -object_type port -direction out]
+set list_meas_iso_exc                                           [find_objects $HIER_MEAS    -pattern *_psw_*            -object_type port -direction out]
+
+set list_meas_iso_clamp0  $list_meas_output_all
+
+foreach i $list_meas_iso_exc {
+set idx                     [lsearch -exact $list_meas_iso_clamp0   "$i"         ]
+set list_meas_iso_clamp0    [lreplace       $list_meas_iso_clamp0   "$idx" "$idx"]
+}
+
+set list_meas_iso_clamp1                                        [find_objects $HIER_MEAS    -pattern *_hreadyout*       -object_type port -direction out]
+set list_meas_iso_clamp1    [concat     $list_meas_iso_clamp1   [find_objects $HIER_MEAS    -pattern *_pd_Idle*         -object_type port -direction out]]
+
+foreach i $list_meas_iso_clamp1 {
+set idx                     [lsearch -exact $list_meas_iso_clamp0   "$i"         ]
+set list_meas_iso_clamp0    [lreplace       $list_meas_iso_clamp0   "$idx" "$idx"]
+}
+
+if { $DBG_TOP_MEAS == 1 } {
+puts  "/////////////////////////////////"
+puts  "// list_meas_iso_exc"
+foreach i $list_meas_iso_exc    {puts $i}
+puts  "---------------------------------"
+puts  "// list_meas_iso_clamp0"
+foreach i $list_meas_iso_clamp0 {puts $i}
+puts  "---------------------------------"
+puts  "// list_meas_iso_clamp1"
+foreach i $list_meas_iso_clamp1 {puts $i}
+puts  "/////////////////////////////////"
+puts  "\n"
+}
+
+
+set_isolation iso_o_meas2bbtop_clamp0 \
+                -domain                 $ISO_PD_MEAS \
+                -location               parent \
+                -elements               " $list_meas_iso_clamp0 " \
+                -clamp_value            0 \
+                -isolation_signal       $HIER_MEAS_Parent/meas_iso_en \
+                -isolation_sense        high \
+                -isolation_supply       SS_BBTOP \
+                -force_isolation
+
+set_isolation iso_o_meas2bbtop_clamp1 \
+                -domain                 $ISO_PD_MEAS \
+                -location               parent \
+                -elements               " $list_meas_iso_clamp1 " \
+                -clamp_value            1 \
+                -isolation_signal       $HIER_MEAS_Parent/meas_iso_en \
+                -isolation_sense        high \
+                -isolation_supply       SS_BBTOP \
+                -force_isolation
+
+use_interface_cell iso_o_meas2bbtop_clamp0_impl \
+                -domain                 $ISO_PD_MEAS \
+                -strategy               { iso_o_meas2bbtop_clamp0 } \
+                -lib_cells              { ISOLOD* }
+
+use_interface_cell iso_o_meas2bbtop_clamp1_impl \
+                -domain                 $ISO_PD_MEAS \
+                -strategy               { iso_o_meas2bbtop_clamp1 } \
+                -lib_cells              { ISOHID* }
+
+
+
+#---------------
+# pdcss
+#---------------
+
+set list_pdcss_output_all                                       [find_objects $HIER_PDCSS   -pattern *                  -object_type port -direction out]
+
+# to soc
+set list_pdcss_iso_exc                                          [find_objects $HIER_PDCSS   -pattern *_psw_*            -object_type port -direction out]
+
+# floating
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern refclk_out         -object_type port -direction out]]
+
+# to dff
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pd*_bwp_ram_m*     -object_type port -direction out]]
+# pdcss_dff_dbg all input
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pdcss_dbg*         -object_type port -direction out]]
+
+# to pdcsb
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pd*start*          -object_type port -direction out]]
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pd*_base_addr*     -object_type port -direction out]]
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pd*_timeout_srst*  -object_type port -direction out]]
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pdc_ncme*          -object_type port -direction out]]
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pdc_llrn*          -object_type port -direction out]]
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pdc_sinr*          -object_type port -direction out]]
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pdc_phi*           -object_type port -direction out]]
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pds_ruu_diag_pwr*  -object_type port -direction out]]
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pds_diag_pwr_exp*  -object_type port -direction out]]
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pds_ruu_inter_pwr* -object_type port -direction out]]
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pds_inter_pwr_exp* -object_type port -direction out]]
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pds_ruu_pwr_vld*   -object_type port -direction out]]
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pds_rsrp*          -object_type port -direction out]]
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pds_llrn*          -object_type port -direction out]]
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pds_sinr*          -object_type port -direction out]]
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pds_scale*         -object_type port -direction out]]
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pds_lmmse_sinr*    -object_type port -direction out]]
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pds_mld*           -object_type port -direction out]]
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pds_foe*           -object_type port -direction out]]
+set list_pdcss_iso_exc      [concat     $list_pdcss_iso_exc     [find_objects $HIER_PDCSS   -pattern pdcss_dbg*         -object_type port -direction out]]
+
+set list_pdcss_iso_clamp0  $list_pdcss_output_all
+
+foreach i $list_pdcss_iso_exc {
+set idx                     [lsearch -exact $list_pdcss_iso_clamp0  "$i"         ]
+set list_pdcss_iso_clamp0   [lreplace       $list_pdcss_iso_clamp0  "$idx" "$idx"]
+}
+
+set list_pdcss_iso_clamp1                                       [find_objects $HIER_PDCSS   -pattern *_hreadyout*       -object_type port -direction out]
+set list_pdcss_iso_clamp1   [concat     $list_pdcss_iso_clamp1  [find_objects $HIER_PDCSS   -pattern *_pd_Idle*         -object_type port -direction out]]
+set list_pdcss_iso_clamp1   [concat     $list_pdcss_iso_clamp1  [find_objects $HIER_PDCSS   -pattern *_no_wr_pending*	-object_type port -direction out]]
+
+foreach i $list_pdcss_iso_clamp1 {
+set idx                     [lsearch -exact $list_pdcss_iso_clamp0  "$i"         ]
+set list_pdcss_iso_clamp0   [lreplace       $list_pdcss_iso_clamp0  "$idx" "$idx"]
+}
+
+
+if { $DBG_TOP_PDCSS == 1 } {
+puts  "/////////////////////////////////"
+puts  "// list_pdcss_iso_exc"
+foreach i $list_pdcss_iso_exc   {puts $i}
+puts  "---------------------------------"
+puts  "// list_pdcss_iso_clamp0"
+foreach i $list_pdcss_iso_clamp0 {puts $i}
+puts  "---------------------------------"
+puts  "// list_pdcss_iso_clamp1"
+foreach i $list_pdcss_iso_clamp1 {puts $i}
+puts  "/////////////////////////////////"
+puts  "\n"
+}
+
+set_isolation iso_o_pdcss2bbtop_clamp0 \
+                -domain                 $ISO_PD_PDCSS \
+                -location               parent \
+                -elements               " $list_pdcss_iso_clamp0 " \
+                -clamp_value            0 \
+                -isolation_signal       $HIER_PDCS_Parent/pdcs_iso_en \
+                -isolation_sense        high \
+                -isolation_supply       SS_BBTOP \
+                -force_isolation
+
+set_isolation iso_o_pdcss2bbtop_clamp1 \
+                -domain                 $ISO_PD_PDCSS \
+                -location               parent \
+                -elements               " $list_pdcss_iso_clamp1 " \
+                -clamp_value            1 \
+                -isolation_signal       $HIER_PDCS_Parent/pdcs_iso_en \
+                -isolation_sense        high \
+                -isolation_supply       SS_BBTOP \
+                -force_isolation
+
+use_interface_cell iso_o_pdcss2bbtop_clamp0_impl \
+                -domain                 $ISO_PD_PDCSS \
+                -strategy               { iso_o_pdcss2bbtop_clamp0 } \
+                -lib_cells              { ISOLOD* }
+
+use_interface_cell iso_o_pdcss2bbtop_clamp1_impl \
+                -domain                 $ISO_PD_PDCSS \
+                -strategy               { iso_o_pdcss2bbtop_clamp1 } \
+                -lib_cells              { ISOHID* }
+
+
+
+
+#---------------
+# pdcsb
+#---------------
+
+set list_pdcsb_output_all                                       [find_objects $HIER_PDCSB   -pattern *                  -object_type port -direction out]
+
+# to soc
+set list_pdcsb_iso_exc                                          [find_objects $HIER_PDCSB   -pattern *_psw_*            -object_type port -direction out]
+
+# to pdcss
+set list_pdcsb_iso_exc      [concat     $list_pdcsb_iso_exc     [find_objects $HIER_PDCSB   -pattern pdc_cfi*           -object_type port -direction out]]
+set list_pdcsb_iso_exc      [concat     $list_pdcsb_iso_exc     [find_objects $HIER_PDCSB   -pattern pdc_crc*           -object_type port -direction out]]
+set list_pdcsb_iso_exc      [concat     $list_pdcsb_iso_exc     [find_objects $HIER_PDCSB   -pattern pdc_cch*           -object_type port -direction out]]
+set list_pdcsb_iso_exc      [concat     $list_pdcsb_iso_exc     [find_objects $HIER_PDCSB   -pattern pds*rdy*           -object_type port -direction out]]
+
+set list_pdcsb_iso_clamp0  $list_pdcsb_output_all
+
+foreach i $list_pdcsb_iso_exc {
+set idx                     [lsearch -exact $list_pdcsb_iso_clamp0  "$i"         ]
+set list_pdcsb_iso_clamp0   [lreplace       $list_pdcsb_iso_clamp0  "$idx" "$idx"]
+}
+
+set list_pdcsb_iso_clamp1                                       [find_objects $HIER_PDCSB   -pattern *_hreadyout*       -object_type port -direction out]
+set list_pdcsb_iso_clamp1   [concat     $list_pdcsb_iso_clamp1  [find_objects $HIER_PDCSB   -pattern *_pd_Idle*         -object_type port -direction out]]
+
+foreach i $list_pdcsb_iso_clamp1 {
+set idx                     [lsearch -exact $list_pdcsb_iso_clamp0  "$i"         ]
+set list_pdcsb_iso_clamp0   [lreplace       $list_pdcsb_iso_clamp0  "$idx" "$idx"]
+}
+
+if { $DBG_TOP_PDCSB == 1 } {
+puts  "/////////////////////////////////"
+puts  "// list_pdcsb_iso_exc"
+foreach i $list_pdcsb_iso_exc   {puts $i}
+puts  "---------------------------------"
+puts  "// list_pdcsb_iso_clamp0"
+foreach i $list_pdcsb_iso_clamp0 {puts $i}
+puts  "---------------------------------"
+puts  "// list_pdcsb_iso_clamp1"
+foreach i $list_pdcsb_iso_clamp1 {puts $i}
+puts  "/////////////////////////////////"
+puts  "\n"
+}
+
+set_isolation iso_o_pdcsb2bbtop_clamp0 \
+                -domain                 $ISO_PD_PDCSB \
+                -location               parent \
+                -elements               " $list_pdcsb_iso_clamp0 " \
+                -clamp_value            0 \
+                -isolation_signal       $HIER_PDCS_Parent/pdcs_iso_en \
+                -isolation_sense        high \
+                -isolation_supply       SS_BBTOP \
+                -force_isolation
+
+set_isolation iso_o_pdcsb2bbtop_clamp1 \
+                -domain                 $ISO_PD_PDCSB \
+                -location               parent \
+                -elements               " $list_pdcsb_iso_clamp1 " \
+                -clamp_value            1 \
+                -isolation_signal       $HIER_PDCS_Parent/pdcs_iso_en \
+                -isolation_sense        high \
+                -isolation_supply       SS_BBTOP \
+                -force_isolation
+
+use_interface_cell iso_o_pdcsb2bbtop_clamp0_impl \
+                -domain                 $ISO_PD_PDCSB \
+                -strategy               { iso_o_pdcsb2bbtop_clamp0 } \
+                -lib_cells              { ISOLOD* }
+
+use_interface_cell iso_o_pdcsb2bbtop_clamp1_impl \
+                -domain                 $ISO_PD_PDCSB \
+                -strategy               { iso_o_pdcsb2bbtop_clamp1 } \
+                -lib_cells              { ISOHID* }
+
+
+
+
+
+#---------------
+# ul
+#---------------
+
+set list_ul_output_all                                          [find_objects $HIER_UL      -pattern *                  -object_type port -direction out]
+
+# to soc
+set list_ul_iso_exc                                             [find_objects $HIER_UL      -pattern *_psw_*            -object_type port -direction out]
+
+# to dff
+set list_ul_iso_exc         [concat     $list_ul_iso_exc        [find_objects $HIER_UL      -pattern tx_dat_o*          -object_type port -direction out]]
+set list_ul_iso_exc         [concat     $list_ul_iso_exc        [find_objects $HIER_UL      -pattern tx_dpd_ram*        -object_type port -direction out]]
+set list_ul_iso_exc         [concat     $list_ul_iso_exc        [find_objects $HIER_UL      -pattern debug_ul*          -object_type port -direction out]]
+
+
+set list_ul_iso_clamp0  $list_ul_output_all
+
+foreach i $list_ul_iso_exc {
+set idx                     [lsearch -exact $list_ul_iso_clamp0     "$i"         ]
+set list_ul_iso_clamp0      [lreplace       $list_ul_iso_clamp0     "$idx" "$idx"]
+}
+
+set list_ul_iso_clamp1                                          [find_objects $HIER_UL      -pattern *_hreadyout*       -object_type port -direction out]
+set list_ul_iso_clamp1      [concat     $list_ul_iso_clamp1     [find_objects $HIER_UL      -pattern *_pd_Idle*         -object_type port -direction out]]
+
+foreach i $list_ul_iso_clamp1 {
+set idx                     [lsearch -exact $list_ul_iso_clamp0     "$i"         ]
+set list_ul_iso_clamp0      [lreplace       $list_ul_iso_clamp0     "$idx" "$idx"]
+}
+
+if { $DBG_TOP_UL == 1 } {
+puts  "/////////////////////////////////"
+puts  "// list_ul_iso_exc"
+foreach i $list_ul_iso_exc      {puts $i}
+puts  "---------------------------------"
+puts  "// list_ul_iso_clamp0"
+foreach i $list_ul_iso_clamp0   {puts $i}
+puts  "---------------------------------"
+puts  "// list_ul_iso_clamp1"
+foreach i $list_ul_iso_clamp1   {puts $i}
+puts  "/////////////////////////////////"
+puts  "\n"
+}
+
+set_isolation iso_o_ul2bbtop_clamp0 \
+                -domain                 $ISO_PD_UL \
+                -location               parent \
+                -elements               " $list_ul_iso_clamp0 " \
+                -clamp_value            0 \
+                -isolation_signal       $HIER_UL_Parent/ul_iso_en \
+                -isolation_sense        high \
+                -isolation_supply       SS_BBTOP \
+                -force_isolation
+
+set_isolation iso_o_ul2bbtop_clamp1 \
+                -domain                 $ISO_PD_UL \
+                -location               parent \
+                -elements               " $list_ul_iso_clamp1 " \
+                -clamp_value            1 \
+                -isolation_signal       $HIER_UL_Parent/ul_iso_en \
+                -isolation_sense        high \
+                -isolation_supply       SS_BBTOP \
+                -force_isolation
+
+use_interface_cell iso_o_ul2bbtop_clamp0_impl \
+                -domain                 $ISO_PD_UL \
+                -strategy               { iso_o_ul2bbtop_clamp0 } \
+                -lib_cells              { ISOLOD* }
+
+use_interface_cell iso_o_ul2bbtop_clamp1_impl \
+                -domain                 $ISO_PD_UL \
+                -strategy               { iso_o_ul2bbtop_clamp1 } \
+                -lib_cells              { ISOHID* }
+
+
+
+
+
+
+
+#-------------------------------------------------------------------------------
+# Ports Setting
+#-------------------------------------------------------------------------------
+
+set bby_pwr_vdd         [find_objects . -pattern *VDD*      -object_type port]
+set bby_pwr_vss         [find_objects . -pattern *VSS*      -object_type port]
+set bby_pwr_pin         [concat $bby_pwr_vdd $bby_pwr_vss]
+# psw should be powered by vdd_main, then leveled to vdd_mdm
+set bby_vddmdm_ports    ""
+set bby_vddmain_ports   [find_objects . -pattern *        -object_type port]
+
+foreach i $bby_vddmdm_ports {
+set idx                 [lsearch -exact $bby_vddmain_ports $i]
+set bby_vddmain_ports   [lreplace       $bby_vddmain_ports "$idx" "$idx"]
+}
+
+foreach i $bby_pwr_pin {
+set idx                 [lsearch -exact $bby_vddmain_ports $i]
+set bby_vddmain_ports   [lreplace       $bby_vddmain_ports "$idx" "$idx"]
+}
+
+foreach i $top_analog_port {
+set idx                 [lsearch -exact $bby_vddmain_ports $i]
+set bby_vddmain_ports   [lreplace       $bby_vddmain_ports "$idx" "$idx"]
+}
+
+
+if { $DBG_TOP_ONLY == 1 } {
+puts  "/////////////////////////////////"
+puts  "// bby_vddmain_ports"
+foreach i $bby_vddmain_ports    {puts $i}
+puts  "---------------------------------"
+puts  "// bby_vddmdm_ports"
+foreach i $bby_vddmdm_ports     {puts $i}
+puts  "---------------------------------"
+puts  "// bby_pwr_pin"
+foreach i $bby_pwr_pin          {puts $i}
+puts  "/////////////////////////////////"
+puts  "\n"
+}
+
+set_port_attributes \
+-ports              $bby_vddmain_ports \
+-driver_supply      SS_MAIN \
+-receiver_supply    SS_MAIN
+
+# analog power pin power matching lib description
+
+set_port_attributes \
+-ports                  AFE_ANATP \
+-driver_supply          SS_AFE_AVDD18_PMU \
+-receiver_supply        SS_AFE_AVDD18_PMU
+
+set_port_attributes \
+-ports                  AFE_AUXDAC_TCXO_VOUT \
+-driver_supply          SS_AFE_AVDD18_AUXDAC \
+-receiver_supply        SS_AFE_AVDD18_AUXDAC
+
+set_port_attributes \
+-ports                  AFE_BBVCO_TSTN \
+-driver_supply          SS_AFE_AVDD12_PLL_VCO \
+-receiver_supply        SS_AFE_AVDD12_PLL_VCO
+
+set_port_attributes \
+-ports                  AFE_BBVCO_TSTP \
+-driver_supply          SS_AFE_AVDD12_PLL_VCO \
+-receiver_supply        SS_AFE_AVDD12_PLL_VCO
+
+set_port_attributes \
+-ports                  AFE_TXDAC1_OUT_IN \
+-driver_supply          SS_AFE_AVDD18_TXDAC1 \
+-receiver_supply        SS_AFE_AVDD18_TXDAC1
+
+set_port_attributes \
+-ports                  AFE_TXDAC1_OUT_IP \
+-driver_supply          SS_AFE_AVDD18_TXDAC1 \
+-receiver_supply        SS_AFE_AVDD18_TXDAC1
+
+set_port_attributes \
+-ports                  AFE_TXDAC1_OUT_QN \
+-driver_supply          SS_AFE_AVDD18_TXDAC1 \
+-receiver_supply        SS_AFE_AVDD18_TXDAC1
+
+set_port_attributes \
+-ports                  AFE_TXDAC1_OUT_QP \
+-driver_supply          SS_AFE_AVDD18_TXDAC1 \
+-receiver_supply        SS_AFE_AVDD18_TXDAC1
+
+set_port_attributes \
+-ports                  AFE_TXDAC2_OUT_IN \
+-driver_supply          SS_AFE_AVDD18_TXDAC2 \
+-receiver_supply        SS_AFE_AVDD18_TXDAC2
+
+set_port_attributes \
+-ports                  AFE_TXDAC2_OUT_IP \
+-driver_supply          SS_AFE_AVDD18_TXDAC2 \
+-receiver_supply        SS_AFE_AVDD18_TXDAC2
+
+set_port_attributes \
+-ports                  AFE_TXDAC2_OUT_QN \
+-driver_supply          SS_AFE_AVDD18_TXDAC2 \
+-receiver_supply        SS_AFE_AVDD18_TXDAC2
+
+set_port_attributes \
+-ports                  AFE_TXDAC2_OUT_QP \
+-driver_supply          SS_AFE_AVDD18_TXDAC2 \
+-receiver_supply        SS_AFE_AVDD18_TXDAC2
+
+set_port_attributes \
+-ports                  AFE_BBPLL_REFCLK_IN \
+-driver_supply          SS_AFE_AVDD09_CKBUF \
+-receiver_supply        SS_AFE_AVDD09_CKBUF
+
+set_port_attributes \
+-ports                  AFE_DRXADC_VIN_I \
+-driver_supply          SS_AFE_AVDD12_DRXADC \
+-receiver_supply        SS_AFE_AVDD12_DRXADC
+
+set_port_attributes \
+-ports                  AFE_DRXADC_VIN_Q \
+-driver_supply          SS_AFE_AVDD12_DRXADC \
+-receiver_supply        SS_AFE_AVDD12_DRXADC
+
+set_port_attributes \
+-ports                  AFE_DRXADC_VIP_I \
+-driver_supply          SS_AFE_AVDD12_DRXADC \
+-receiver_supply        SS_AFE_AVDD12_DRXADC
+
+set_port_attributes \
+-ports                  AFE_DRXADC_VIP_Q \
+-driver_supply          SS_AFE_AVDD12_DRXADC \
+-receiver_supply        SS_AFE_AVDD12_DRXADC
+
+set_port_attributes \
+-ports                  AFE_ORXADC_VIN_I \
+-driver_supply          SS_AFE_AVDD12_ORXADC \
+-receiver_supply        SS_AFE_AVDD12_ORXADC
+
+set_port_attributes \
+-ports                  AFE_ORXADC_VIN_Q \
+-driver_supply          SS_AFE_AVDD12_ORXADC \
+-receiver_supply        SS_AFE_AVDD12_ORXADC
+
+set_port_attributes \
+-ports                  AFE_ORXADC_VIP_I \
+-driver_supply          SS_AFE_AVDD12_ORXADC \
+-receiver_supply        SS_AFE_AVDD12_ORXADC
+
+set_port_attributes \
+-ports                  AFE_ORXADC_VIP_Q \
+-driver_supply          SS_AFE_AVDD12_ORXADC \
+-receiver_supply        SS_AFE_AVDD12_ORXADC
+
+set_port_attributes \
+-ports                  AFE_PRXADC_VIN_I \
+-driver_supply          SS_AFE_AVDD12_PRXADC \
+-receiver_supply        SS_AFE_AVDD12_PRXADC
+
+set_port_attributes \
+-ports                  AFE_PRXADC_VIN_Q \
+-driver_supply          SS_AFE_AVDD12_PRXADC \
+-receiver_supply        SS_AFE_AVDD12_PRXADC
+
+set_port_attributes \
+-ports                  AFE_PRXADC_VIP_I \
+-driver_supply          SS_AFE_AVDD12_PRXADC \
+-receiver_supply        SS_AFE_AVDD12_PRXADC
+
+set_port_attributes \
+-ports                  AFE_PRXADC_VIP_Q \
+-driver_supply          SS_AFE_AVDD12_PRXADC \
+-receiver_supply        SS_AFE_AVDD12_PRXADC
+
+
+
+
+
+
+
+
+
+
+
+#-------------------------------------------------------------------------------
+# Macro Setting
+#-------------------------------------------------------------------------------
+
+#---------------------------------------
+# supply net
+#---------------------------------------
+
+set list_ram_bbtop  [find_objects "bb_phy_dig_inst/tpu_wrap_inst" -pattern *TS83*_lib -object_type inst -transitive TRUE]
+
+foreach mem_i $list_ram_bbtop {
+connect_supply_net  VDD_BBTOP           -ports ${mem_i}/VDDCE
+connect_supply_net  VDD_BBTOP           -ports ${mem_i}/VDDPE
+connect_supply_net  VSS                 -ports ${mem_i}/VSSE
+}
+
+if { $BBPHY_HDN_MACRO == 1 } {
+
+# harden internal power pin
+connect_supply_net  VDD_CS              -ports $HIER_CS/VDD_CS
+connect_supply_net  VDD_DFF             -ports $HIER_DFF/VDD_DFF
+connect_supply_net  VDD_MEAS            -ports $HIER_MEAS/VDD_MEAS
+connect_supply_net  VDD_PDCSB           -ports $HIER_PDCSB/VDD_PDCSB
+connect_supply_net  VDD_PDCSS           -ports $HIER_PDCSS/VDD_PDCSS
+connect_supply_net  VDD_UL              -ports $HIER_UL/VDD_UL
+
+}
+
+# Harden primary power pin
+connect_supply_net  VDD_MDM             -ports $HIER_CS/VDD_MDM
+connect_supply_net  VSS                 -ports $HIER_CS/VSS
+
+connect_supply_net  VDD_MDM             -ports $HIER_DFF/VDD_MDM
+connect_supply_net  VSS                 -ports $HIER_DFF/VSS
+
+connect_supply_net  VDD_MDM             -ports $HIER_MEAS/VDD_MDM
+connect_supply_net  VSS                 -ports $HIER_MEAS/VSS
+
+connect_supply_net  VDD_MDM             -ports $HIER_PDCSB/VDD_MDM
+connect_supply_net  VSS                 -ports $HIER_PDCSB/VSS
+
+connect_supply_net  VDD_MDM             -ports $HIER_PDCSS/VDD_MDM
+connect_supply_net  VSS                 -ports $HIER_PDCSS/VSS
+
+connect_supply_net  VDD_MDM             -ports $HIER_UL/VDD_MDM
+connect_supply_net  VSS                 -ports $HIER_UL/VSS
+
+# DFF Harden: afe pll power pin
+connect_supply_net  AFE_AVDD12_PLL_VCO  -ports $HIER_DFF/AFE_AVDD12_PLL_VCO
+connect_supply_net  AFE_AVSS_PLL_VCO    -ports $HIER_DFF/AFE_AVSS_PLL_VCO
+
+connect_supply_net  AFE_AVDD09_PLL_MMD  -ports $HIER_DFF/AFE_AVDD09_PLL_MMD
+connect_supply_net  AFE_AVSS_PLL_MMD    -ports $HIER_DFF/AFE_AVSS_PLL_MMD
+
+connect_supply_net  AFE_AVDD09_PLL_CP   -ports $HIER_DFF/AFE_AVDD09_PLL_CP
+connect_supply_net  AFE_AVSS_PLL_CP     -ports $HIER_DFF/AFE_AVSS_PLL_CP
+
+# DFF Harden: afe prxadc power pin
+connect_supply_net  AFE_AVDD12_PRXADC   -ports $HIER_DFF/AFE_AVDD12_PRXADC
+connect_supply_net  AFE_DVDD09_PRXADC   -ports $HIER_DFF/AFE_DVDD09_PRXADC
+connect_supply_net  AFE_AVSS_PRXADC     -ports $HIER_DFF/AFE_AVSS_PRXADC
+connect_supply_net  AFE_DVSS_PRXADC     -ports $HIER_DFF/AFE_DVSS_PRXADC
+
+# DFF Harden: afe drxadc power pin
+connect_supply_net  AFE_AVDD12_DRXADC   -ports $HIER_DFF/AFE_AVDD12_DRXADC
+connect_supply_net  AFE_DVDD09_DRXADC   -ports $HIER_DFF/AFE_DVDD09_DRXADC
+connect_supply_net  AFE_AVSS_DRXADC     -ports $HIER_DFF/AFE_AVSS_DRXADC
+connect_supply_net  AFE_DVSS_DRXADC     -ports $HIER_DFF/AFE_DVSS_DRXADC
+
+# DFF Harden: afe orxadc power pin
+connect_supply_net  AFE_AVDD12_ORXADC   -ports $HIER_DFF/AFE_AVDD12_ORXADC
+connect_supply_net  AFE_DVDD09_ORXADC   -ports $HIER_DFF/AFE_DVDD09_ORXADC
+connect_supply_net  AFE_AVSS_ORXADC     -ports $HIER_DFF/AFE_AVSS_ORXADC
+connect_supply_net  AFE_DVSS_ORXADC     -ports $HIER_DFF/AFE_DVSS_ORXADC
+
+# DFF Harden: afe txdac1 power pin
+connect_supply_net  AFE_AVDD18_TXDAC1   -ports $HIER_DFF/AFE_AVDD18_TXDAC1
+connect_supply_net  AFE_AVDD12_TXDAC1   -ports $HIER_DFF/AFE_AVDD12_TXDAC1
+connect_supply_net  AFE_DVDD09_TXDAC1   -ports $HIER_DFF/AFE_DVDD09_TXDAC1
+connect_supply_net  AFE_AVSS_TXDAC1     -ports $HIER_DFF/AFE_AVSS_TXDAC1
+connect_supply_net  AFE_DVSS_TXDAC1     -ports $HIER_DFF/AFE_DVSS_TXDAC1
+
+# DFF Harden: afe txdac2 power pin
+connect_supply_net  AFE_AVDD18_TXDAC2   -ports $HIER_DFF/AFE_AVDD18_TXDAC2
+connect_supply_net  AFE_AVDD12_TXDAC2   -ports $HIER_DFF/AFE_AVDD12_TXDAC2
+connect_supply_net  AFE_DVDD09_TXDAC2   -ports $HIER_DFF/AFE_DVDD09_TXDAC2
+connect_supply_net  AFE_AVSS_TXDAC2     -ports $HIER_DFF/AFE_AVSS_TXDAC2
+connect_supply_net  AFE_DVSS_TXDAC2     -ports $HIER_DFF/AFE_DVSS_TXDAC2
+
+# DFF Harden: afe auxdac power pin
+connect_supply_net  AFE_AVDD18_AUXDAC   -ports $HIER_DFF/AFE_AVDD18_AUXDAC
+connect_supply_net  AFE_AVSS_18AUXDAC   -ports $HIER_DFF/AFE_AVSS_18AUXDAC
+
+# DFF Harden: afe pmu power pin
+connect_supply_net  AFE_AVDD18_PMU      -ports $HIER_DFF/AFE_AVDD18_PMU
+connect_supply_net  AFE_AVSS_PMU        -ports $HIER_DFF/AFE_AVSS_PMU
+
+# DFF Harden: afe ckbuf power pin
+connect_supply_net  AFE_AVDD09_CKBUF    -ports $HIER_DFF/AFE_AVDD09_CKBUF
+connect_supply_net  AFE_AVSS_CKBUF      -ports $HIER_DFF/AFE_AVSS_CKBUF
+
+
+#-------------------------------------------------------------------------------
+# Power State Setting
+#-------------------------------------------------------------------------------
+
+set PST_SS_MAIN     SS_MAIN
+set PST_SS_MDM      SS_MDM
+set PST_SS_BBTOP    SS_BBTOP
+
+if { $BBPHY_HDN_MACRO == 1 } {
+
+set PST_SS_CS       SS_CS_PG
+set PST_SS_DFF      SS_DFF_PG
+set PST_SS_MEAS     SS_MEAS_PG
+set PST_SS_PDCSB    SS_PDCSB_PG
+set PST_SS_PDCSS    SS_PDCSS_PG
+set PST_SS_UL       SS_UL_PG
+
+} else {
+
+set PST_SS_CS       ${HIER_CS}/SS_CS_PG
+set PST_SS_DFF      ${HIER_DFF}/SS_DFF_PG
+set PST_SS_MEAS     ${HIER_MEAS}/SS_MEAS_PG
+set PST_SS_PDCSB    ${HIER_PDCSB}/SS_PDCSB_PG
+set PST_SS_PDCSS    ${HIER_PDCSS}/SS_PDCSS_PG
+set PST_SS_UL       ${HIER_UL}/SS_UL_PG
+
+}
+
+
+
+add_power_state \
+-supply            $PST_SS_MAIN \
+-state VDDL      { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF       { -supply_expr { power  == { OFF          }                              } }
+
+add_power_state \
+-supply            $PST_SS_MDM \
+-state VDDH      { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL      { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF       { -supply_expr { power  == { OFF          }                              } }
+
+add_power_state \
+-supply            $PST_SS_BBTOP \
+-state VDDH      { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL      { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF       { -supply_expr { power  == { OFF          }                              } }
+
+if {  $BBPHY_HDN_MACRO == 1 } {
+
+add_power_state \
+-supply            $PST_SS_CS \
+-state VDDH      { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL      { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF       { -supply_expr { power  == { OFF          }                              } }
+
+add_power_state \
+-supply            $PST_SS_DFF \
+-state VDDH      { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL      { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF       { -supply_expr { power  == { OFF          }                              } }
+
+add_power_state \
+-supply            $PST_SS_MEAS \
+-state VDDH      { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL      { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF       { -supply_expr { power  == { OFF          }                              } }
+
+add_power_state \
+-supply            $PST_SS_PDCSB \
+-state VDDH      { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL      { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF       { -supply_expr { power  == { OFF          }                              } }
+
+add_power_state \
+-supply            $PST_SS_PDCSS \
+-state VDDH      { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL      { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF       { -supply_expr { power  == { OFF          }                              } }
+
+add_power_state \
+-supply            $PST_SS_UL \
+-state VDDH      { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL      { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF       { -supply_expr { power  == { OFF          }                              } }
+
+}
+
+
+add_power_state \
+-supply            SS_AFE_AVDD12_PLL_VCO \
+-state ON       { -supply_expr { power  == { FULL_ON 1.08 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+add_power_state \
+-supply            SS_AFE_AVDD09_PLL_MMD \
+-state VDDH     { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL     { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+add_power_state \
+-supply            SS_AFE_AVDD09_PLL_CP \
+-state VDDH     { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL     { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+
+
+add_power_state \
+-supply            SS_AFE_AVDD12_PRXADC \
+-state ON       { -supply_expr { power  == { FULL_ON 1.08 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+add_power_state \
+-supply            SS_AFE_DVDD09_PRXADC \
+-state VDDH     { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL     { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+
+
+add_power_state \
+-supply            SS_AFE_AVDD12_DRXADC \
+-state ON       { -supply_expr { power  == { FULL_ON 1.08 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+add_power_state \
+-supply            SS_AFE_DVDD09_DRXADC \
+-state VDDH     { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL     { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+
+
+add_power_state \
+-supply            SS_AFE_AVDD12_ORXADC \
+-state ON       { -supply_expr { power  == { FULL_ON 1.08 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+add_power_state \
+-supply            SS_AFE_DVDD09_ORXADC \
+-state VDDH     { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL     { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+
+
+add_power_state \
+-supply            SS_AFE_AVDD18_TXDAC1 \
+-state ON       { -supply_expr { power  == { FULL_ON 1.62 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+add_power_state \
+-supply            SS_AFE_AVDD12_TXDAC1 \
+-state ON       { -supply_expr { power  == { FULL_ON 1.08 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+add_power_state \
+-supply            SS_AFE_DVDD09_TXDAC1 \
+-state VDDH     { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL     { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+
+
+add_power_state \
+-supply            SS_AFE_AVDD18_TXDAC2 \
+-state ON       { -supply_expr { power  == { FULL_ON 1.62 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+add_power_state \
+-supply            SS_AFE_AVDD12_TXDAC2 \
+-state ON       { -supply_expr { power  == { FULL_ON 1.08 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+add_power_state \
+-supply            SS_AFE_DVDD09_TXDAC2 \
+-state VDDH     { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL     { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+
+
+add_power_state \
+-supply            SS_AFE_AVDD18_AUXDAC \
+-state ON       { -supply_expr { power  == { FULL_ON 1.62 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+
+
+add_power_state \
+-supply            SS_AFE_AVDD18_PMU \
+-state ON       { -supply_expr { power  == { FULL_ON 1.62 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+
+
+add_power_state \
+-supply            SS_AFE_AVDD09_CKBUF \
+-state VDDH     { -supply_expr { power  == { FULL_ON 0.81 } && ground == { FULL_ON 0.0 } } } \
+-state VDDL     { -supply_expr { power  == { FULL_ON 0.72 } && ground == { FULL_ON 0.0 } } } \
+-state OFF      { -supply_expr { power  == { OFF          }                              } }
+
+
+add_power_state -domain PD_BBPHY \
+-state BBY_ALL_OFF  " -logic_expr { $PST_SS_MAIN == OFF  && $PST_SS_MDM == OFF  && $PST_SS_BBTOP == OFF  && $PST_SS_DFF == OFF  && $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == OFF  && $PST_SS_CS == OFF  && $PST_SS_MEAS == OFF  } " \
+-state BBY_VDDH_01  " -logic_expr { $PST_SS_MAIN == VDDL && $PST_SS_MDM == VDDH && $PST_SS_BBTOP == OFF  && $PST_SS_DFF == OFF  && $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == OFF  && $PST_SS_CS == OFF  && $PST_SS_MEAS == OFF  } " \
+-state BBY_VDDH_02  " -logic_expr { $PST_SS_MAIN == VDDL && $PST_SS_MDM == VDDH && $PST_SS_BBTOP == VDDH && $PST_SS_DFF == OFF  && $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == OFF  && $PST_SS_CS == OFF  && $PST_SS_MEAS == OFF  } " \
+-state BBY_VDDH_03  " -logic_expr { $PST_SS_MAIN == VDDL && $PST_SS_MDM == VDDH && $PST_SS_BBTOP == VDDH && $PST_SS_DFF == VDDH && $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == OFF  && $PST_SS_CS == OFF  && $PST_SS_MEAS == OFF  } " \
+-state BBY_VDDH_04  " -logic_expr { $PST_SS_MAIN == VDDL && $PST_SS_MDM == VDDH && $PST_SS_BBTOP == VDDH && $PST_SS_DFF == VDDH && $PST_SS_PDCSB == VDDH && $PST_SS_PDCSS == VDDH && $PST_SS_UL == OFF  && $PST_SS_CS == OFF  && $PST_SS_MEAS == OFF  } " \
+-state BBY_VDDH_05  " -logic_expr { $PST_SS_MAIN == VDDL && $PST_SS_MDM == VDDH && $PST_SS_BBTOP == VDDH && $PST_SS_DFF == VDDH && $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == VDDH && $PST_SS_CS == OFF  && $PST_SS_MEAS == OFF  } " \
+-state BBY_VDDH_06  " -logic_expr { $PST_SS_MAIN == VDDL && $PST_SS_MDM == VDDH && $PST_SS_BBTOP == VDDH && $PST_SS_DFF == VDDH && $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == OFF  && $PST_SS_CS == VDDH && $PST_SS_MEAS == OFF  } " \
+-state BBY_VDDH_07  " -logic_expr { $PST_SS_MAIN == VDDL && $PST_SS_MDM == VDDH && $PST_SS_BBTOP == VDDH && $PST_SS_DFF == VDDH && $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == OFF  && $PST_SS_CS == OFF  && $PST_SS_MEAS == VDDH } " \
+-state BBY_VDDH_ON  " -logic_expr { $PST_SS_MAIN == VDDL && $PST_SS_MDM == VDDH && $PST_SS_BBTOP == VDDH && $PST_SS_DFF == VDDH && $PST_SS_PDCSB == VDDH && $PST_SS_PDCSS == VDDH && $PST_SS_UL == VDDH && $PST_SS_CS == VDDH && $PST_SS_MEAS == VDDH } " \
+-state BBY_VDDL_01  " -logic_expr { $PST_SS_MAIN == VDDL && $PST_SS_MDM == VDDL && $PST_SS_BBTOP == OFF  && $PST_SS_DFF == OFF  && $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == OFF  && $PST_SS_CS == OFF  && $PST_SS_MEAS == OFF  } " \
+-state BBY_VDDL_02  " -logic_expr { $PST_SS_MAIN == VDDL && $PST_SS_MDM == VDDL && $PST_SS_BBTOP == VDDL && $PST_SS_DFF == OFF  && $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == OFF  && $PST_SS_CS == OFF  && $PST_SS_MEAS == OFF  } " \
+-state BBY_VDDL_03  " -logic_expr { $PST_SS_MAIN == VDDL && $PST_SS_MDM == VDDL && $PST_SS_BBTOP == VDDL && $PST_SS_DFF == VDDL && $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == OFF  && $PST_SS_CS == OFF  && $PST_SS_MEAS == OFF  } " \
+-state BBY_VDDL_04  " -logic_expr { $PST_SS_MAIN == VDDL && $PST_SS_MDM == VDDL && $PST_SS_BBTOP == VDDL && $PST_SS_DFF == VDDL && $PST_SS_PDCSB == VDDL && $PST_SS_PDCSS == VDDL && $PST_SS_UL == OFF  && $PST_SS_CS == OFF  && $PST_SS_MEAS == OFF  } " \
+-state BBY_VDDL_05  " -logic_expr { $PST_SS_MAIN == VDDL && $PST_SS_MDM == VDDL && $PST_SS_BBTOP == VDDL && $PST_SS_DFF == VDDL && $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == VDDL && $PST_SS_CS == OFF  && $PST_SS_MEAS == OFF  } " \
+-state BBY_VDDL_06  " -logic_expr { $PST_SS_MAIN == VDDL && $PST_SS_MDM == VDDL && $PST_SS_BBTOP == VDDL && $PST_SS_DFF == VDDL && $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == OFF  && $PST_SS_CS == VDDL && $PST_SS_MEAS == OFF  } " \
+-state BBY_VDDL_07  " -logic_expr { $PST_SS_MAIN == VDDL && $PST_SS_MDM == VDDL && $PST_SS_BBTOP == VDDL && $PST_SS_DFF == VDDL && $PST_SS_PDCSB == OFF  && $PST_SS_PDCSS == OFF  && $PST_SS_UL == OFF  && $PST_SS_CS == OFF  && $PST_SS_MEAS == VDDL } " \
+-state BBY_VDDL_ON  " -logic_expr { $PST_SS_MAIN == VDDL && $PST_SS_MDM == VDDL && $PST_SS_BBTOP == VDDL && $PST_SS_DFF == VDDL && $PST_SS_PDCSB == VDDL && $PST_SS_PDCSS == VDDL && $PST_SS_UL == VDDL && $PST_SS_CS == VDDL && $PST_SS_MEAS == VDDL } " 
+
+
+
+
+
