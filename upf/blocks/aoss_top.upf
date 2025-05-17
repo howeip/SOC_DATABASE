@@ -1,0 +1,813 @@
+# -----------------------------------------------------------------------------
+#  Function: This is a block-level upf for ca53_cpu
+# -----------------------------------------------------------------------------
+
+upf_version 2.1
+
+set ao_script_path [file normalize [info script]]
+set ao_script_dir  [file dirname $ao_script_path]
+puts $ao_script_dir
+source $ao_script_dir/../soc_top_upf_cfg.tcl
+
+#-------------------------------------------------------------------------------
+# Supply Nets and Ports
+#-------------------------------------------------------------------------------
+create_supply_port -direction in VDD_AO
+#create_supply_port -direction in VDD_MAIN
+create_supply_port -direction in VSS
+
+create_supply_net VDD_AO
+#create_supply_net VDD_MAIN
+create_supply_net VSS -resolve parallel
+
+connect_supply_net VDD_AO   -ports VDD_AO
+#connect_supply_net VDD_MAIN -ports VDD_MAIN
+connect_supply_net VSS      -ports VSS
+
+create_supply_net VDD_N205
+
+#-------------------------------------------------------------------------------
+# IO PAD Supply Nets and Ports
+#-------------------------------------------------------------------------------
+create_supply_port -direction in EFUSE_VQPS
+create_supply_net EFUSE_VQPS
+connect_supply_net EFUSE_VQPS   -ports EFUSE_VQPS
+
+create_supply_port -direction in VDD1V8_AO
+create_supply_net VDD1V8_AO
+connect_supply_net VDD1V8_AO   -ports VDD1V8_AO
+
+create_supply_port -direction in VDD1V2_AO
+create_supply_net VDD1V2_AO
+connect_supply_net VDD1V2_AO   -ports VDD1V2_AO
+
+
+create_supply_port -direction in VDD1V8_USIM2
+create_supply_net VDD1V8_USIM2
+connect_supply_net VDD1V8_USIM2   -ports VDD1V8_USIM2
+
+create_supply_port -direction in VDD1V8_USIM1
+create_supply_net VDD1V8_USIM1
+connect_supply_net VDD1V8_USIM1   -ports VDD1V8_USIM1
+
+create_supply_port -direction in VDD3V3_USIM2
+create_supply_net VDD3V3_USIM2
+connect_supply_net VDD3V3_USIM2   -ports VDD3V3_USIM2
+
+create_supply_port -direction in VDD3V3_USIM1
+create_supply_net VDD3V3_USIM1
+connect_supply_net VDD3V3_USIM1   -ports VDD3V3_USIM1
+
+create_supply_port -direction in VDDPST180_USIM2
+create_supply_port -direction in VDDPST180_USIM1
+create_supply_net VDDPST180_USIM2
+create_supply_net VDDPST180_USIM1
+connect_supply_net VDDPST180_USIM2   -ports VDDPST180_USIM2
+connect_supply_net VDDPST180_USIM1   -ports VDDPST180_USIM1
+#-------------------------------------------------------------------------------
+# Supply Sets
+#-------------------------------------------------------------------------------
+create_supply_set SS_EFUSE     -function {power EFUSE_VQPS}    -function {ground VSS}
+create_supply_set SS_AO        -function {power VDD_AO}        -function {ground VSS}
+#create_supply_set SS_MAIN      -function {power VDD_MAIN}      -function {ground VSS}
+create_supply_set SS_N205      -function {power VDD_N205}      -function {ground VSS}
+create_supply_set SS_1V2_AO    -function {power VDD1V2_AO}     -function {ground VSS}
+create_supply_set SS_1V8_AO    -function {power VDD1V8_AO}     -function {ground VSS}
+create_supply_set SS_1V8_USIM1 -function {power VDD1V8_USIM1}  -function {ground VSS}
+create_supply_set SS_1V8_USIM2 -function {power VDD1V8_USIM2}  -function {ground VSS}
+create_supply_set SS_3V3_USIM1 -function {power VDD3V3_USIM1}  -function {ground VSS}
+create_supply_set SS_3V3_USIM2 -function {power VDD3V3_USIM2}  -function {ground VSS}
+create_supply_set SS_VDDPST180_USIM1 -function {power VDDPST180_USIM1}  -function {ground VSS}
+create_supply_set SS_VDDPST180_USIM2 -function {power VDDPST180_USIM2}  -function {ground VSS}
+
+
+connect_supply_net VSS        -ports u_aoss_func_top/u_por_rc32k/DVSS
+connect_supply_net VDD_AO     -ports u_aoss_func_top/u_por_rc32k/VDD0P9
+
+
+#-------------------------------------------------------------------------------
+# Elements
+#-------------------------------------------------------------------------------
+set N205_hier   "u_aoss_func_top/u_ao_lpc_n205/u_lpc_n205_subsystem"
+set CIPHER_hier "u_aoss_func_top/u_ao_cipher_sec/u_cipher_sec_v1_top"
+set PG_hier     [ concat $N205_hier $CIPHER_hier ]
+
+set is_Genus 0
+#-------------------------------------------------------------------------------
+# Power Domains
+#-------------------------------------------------------------------------------
+create_power_domain PD_AOSS -include_scope \
+                            -supply   {primary SS_AO}
+
+create_power_domain PD_N205 -elements {u_aoss_func_top/u_ao_lpc_n205/u_lpc_n205_subsystem u_aoss_func_top/u_ao_cipher_sec/u_cipher_sec_v1_top} \
+                            -supply   {primary SS_N205}
+#-------------------------------------------------------------------------------
+# Power Switch Setting
+#-------------------------------------------------------------------------------
+#create_logic_port pwr_n205_psw_en  -direction in
+#create_logic_port pwr_n205_psw_ack -direction out
+#set_repeater n205_slv_hresp_1 -domain PD_N205 -elements {slv_hresp\[1\]}
+
+set pwr_n205_psw_en  u_aoss_func_top/u_ao_lpc_n205/pwr_n205_psw_en
+set pwr_n205_psw_ack u_aoss_func_top/u_ao_lpc_n205/pwr_n205_psw_ack
+
+create_power_switch psw_PDN205  -domain PD_N205 \
+    -input_supply_port  {TVDD       SS_AO.power} \
+    -output_supply_port {VDD        SS_N205.power} \
+    -control_port       "NSLEEPIN1  $pwr_n205_psw_en" \
+    -control_port       "NSLEEPIN2  $pwr_n205_psw_en" \
+    -on_state           {ON         TVDD {(NSLEEPIN1) && (NSLEEPIN2)}} \
+    -off_state          {OFF        {(!NSLEEPIN1) && (!NSLEEPIN2)}} \
+    -ack_port           "NSLEEPOUT1 $pwr_n205_psw_ack {NSLEEPIN1 && NSLEEPIN2}"
+
+#map_power_switch psw_PDDSPSS -domain PD_DSPSS -lib_cells {HDRDID2BWP7T40P140LVT}
+map_power_switch psw_PDN205 -domain PD_N205 -lib_cells {HDRDID*}
+
+#-------------------------------------------------------------------------------
+# N205 Isolation Setting
+#-------------------------------------------------------------------------------
+set n205_clamp1_signal [ list $N205_hier/core_wfi_mode \
+                              $N205_hier/core_sleep_value \
+                              $N205_hier/trace_cause\[31\] \
+                              $N205_hier/trace_priv\[0\] \
+                              $N205_hier/trace_priv\[1\] \
+                              u_aoss_func_top/u_ao_cipher_sec/u_cipher_sec_v1_top/ahb3_d32_cipher_m_hprot[0] \
+                              u_aoss_func_top/u_ao_cipher_sec/u_cipher_sec_v1_top/ahb3_d32_cipher_m_hprot[1] \
+                       ]
+
+set n205_exclude_signal [ list $N205_hier/master\[0\] \
+                               $N205_hier/master\[1\] \
+                               $N205_hier/hdmode \
+                               $N205_hier/hsmode \
+                               $N205_hier/tx_evt \
+                               $N205_hier/pwr_n205_psw_ack \
+                        ]
+
+
+set n205_exclude_signal  [ concat $n205_clamp1_signal $n205_exclude_signal ]
+#set n205_mem_exclude_signal  [ concat $n205_mem_signal $n205_exclude_signal ]
+
+
+#create_logic_port pwr_n205_iso_en -direction in
+set pwr_n205_iso_en u_aoss_func_top/u_ao_lpc_n205/pwr_n205_iso_en
+
+set_isolation iso_n205_0 -domain PD_N205 \
+    -isolation_supply_set SS_AO \
+    -clamp_value 0 \
+    -applies_to outputs \
+    -exclude_elements "$n205_exclude_signal" \
+    -isolation_signal "$pwr_n205_iso_en" \
+    -isolation_sense high \
+    -location parent \
+    -force_isolation \
+    -name_suffix ISO_N205_0
+
+set_isolation iso_n205_1 -domain PD_N205 \
+    -isolation_supply_set SS_AO \
+    -clamp_value 1 \
+    -elements "$n205_clamp1_signal" \
+    -isolation_signal "$pwr_n205_iso_en" \
+    -isolation_sense high \
+    -location parent \
+    -force_isolation \
+    -name_suffix ISO_N205_1
+
+map_isolation_cell iso_n205_0 -domain PD_N205 -lib_cells {ISOLOD*}
+map_isolation_cell iso_n205_1 -domain PD_N205 -lib_cells {ISOHID*}
+
+# Retention Setting
+#-------------------------------------------------------------------------------
+# None
+
+#-------------------------------------------------------------------------------
+# Isolation Setting
+#-------------------------------------------------------------------------------
+# None
+set AOSS_clamp1_signal   [ list ddr_lp_csysack \
+                                ddr_pwr_state \
+                                ps_pwr_state  \
+                                dspss_pwr_state  \
+                                bbphy_top_pwr_state \
+                        ]
+
+set AOSS_GPIO_PAD_signal [ list AO_32K_CLK_SEL \
+                               AO_TEST_MODE \
+                               AO_SYSRST_N \
+                               AO_RTC32K_CLK \
+                               AO_ERR_STATE_N \
+                               AO_BOOT_MODE0 \
+                               AO_BOOT_MODE1 \
+                               AO_CLK_MODE0 \
+                               AO_CLK_MODE1 \
+                               AO_PMIC_I2C_SCL \
+                               AO_PMIC_I2C_SDA \
+                               AO_UART_TX \
+                               AO_UART_RX \
+                               AO_USIM_CLK \
+                               AO_USIM_RST \
+                               AO_USIM_DATA \
+                               AO_SPI_CS \
+                               AO_SPI_SCK \
+                               AO_SPI_MOSI \
+                               AO_SPI_MISO \
+                               AO_LP_EN_N \
+                               AO_WAKE_DEVICE \
+                               AO_CXX_INT_IN \
+                               AO_CXX_INT_OUT \
+                               AO_XWSE_INT \
+                               AO_SWC \
+                               AO_SWD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_32k_clk_sel_pad/u_PRWDWUWHWSWDGE_H_G/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_test_mode_pad/u_PRWDWUWHWSWDGE_H_G/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_sysrst_n_pad/u_INNO_GPIO_CELL/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_rtc32k_clk_pad/u_INNO_GPIO_CELL/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_err_state_n_pad/u_INNO_GPIO_CELL/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_boot_mode0_pad/u_PRWDWUWHWSWDGE_H_G/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_boot_mode1_pad/u_PRWDWUWHWSWDGE_H_G/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_clk_mode0_pad/u_PRWDWUWHWSWDGE_H_G/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_clk_mode1_pad/u_PRWDWUWHWSWDGE_H_G/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_pmic_i2c_scl_pad/u_PRWDWUWHWSWDGE_H_G/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_pmic_i2c_sda_pad/u_PRWDWUWHWSWDGE_H_G/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_uart_tx_pad/u_PRWDWUWHWSWDGE_H_G/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_uart_rx_pad/u_PRWDWUWHWSWDGE_H_G/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_usim_clk_pad/u_PRWHSWCDGSIM_H/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_usim_rst_pad/u_PRWHSWCDGSIM_H/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_usim_data_pad/u_PRWHSWCDGSIM_H/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_cs_pad/u_PRWHSWCDGSIM_H/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_sck_pad/u_PRWHSWCDGSIM_H/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_mosi_pad/u_PRWHSWCDGSIM_H/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_miso_pad/u_PRWHSWCDGSIM_H/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_lp_en_n_pad/u_INNO_GPIO_CELL/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_wake_device_pad/u_INNO_GPIO_CELL/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_cxx_int_in_pad/u_PRWDWUWHWSWDGE_H_G/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_cxx_int_out_pad/u_PRWDWUWHWSWDGE_H_G/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_xwse_int_pad/u_PRWDWUWHWSWDGE_H_G/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_swc_pad/u_PRWDWUWHWSWDGE_H_G/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_swd_pad/u_PRWDWUWHWSWDGE_H_G/PAD \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_io0_vref_inno_poc_cell/PWROKB_H \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_io1_vref_inno_poc_cell/PWROKB_H \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_io0_vref_vref/u_INNO_VREF_CELL/VREF \
+                               u_aoss_func_top/u_ao_io/u_ao_io_top/u_io1_vref_vref/u_INNO_VREF_CELL/VREF \
+                         ]
+
+set AOSS_floating_signal [ list cpuss_jtag_BK_TMS \
+                                cpuss_jtag_DRV_TMS \
+                                cpuss_jtag_DRV_TDO \
+                                cpuss_jtag_TMS_out \
+                                cpuss_jtag_dwen \
+                         ]
+
+set AOSS_exclude_signal [ concat $AOSS_clamp1_signal $AOSS_GPIO_PAD_signal $AOSS_floating_signal ]
+
+set pwr_ao_ss_iso_en  u_aoss_func_top/soctop_iso_en
+
+
+
+set AOSS_clamp0_signal                                    [find_objects . -pattern *          -object_type port -direction in]
+foreach i $AOSS_exclude_signal {
+set idx                    [lsearch -exact $AOSS_clamp0_signal "$i"         ]
+set AOSS_clamp0_signal     [lreplace       $AOSS_clamp0_signal "$idx" "$idx"]
+}
+puts  "/////////////////////////////////"
+puts  "// list_aoss_i_exc"
+foreach i $AOSS_clamp0_signal     {puts $i}
+puts  "---------------------------------"
+puts  "/////////////////////////////////"
+puts  "\n"
+puts  "\n"
+
+
+
+set_isolation iso_aoss_0 -domain PD_AOSS \
+     -clamp_value 0 \
+     -elements "$AOSS_clamp0_signal" \
+     -isolation_signal "$pwr_ao_ss_iso_en" \
+     -isolation_sense high \
+     -isolation_supply_set SS_AO \
+     -location self \
+     -force_isolation \
+     -name_suffix ISO_AOSS_0
+
+set_isolation iso_aoss_1 -domain PD_AOSS \
+     -clamp_value 1 \
+     -elements "$AOSS_clamp1_signal" \
+     -isolation_signal "$pwr_ao_ss_iso_en" \
+     -isolation_sense high \
+     -isolation_supply_set SS_AO \
+     -location self \
+     -force_isolation \
+     -name_suffix ISO_AOSS_1
+
+use_interface_cell iso_aoss_impl_0 -strategy {iso_aoss_0} \
+-domain PD_AOSS \
+-lib_cells {ISOLOD*}
+
+use_interface_cell iso_aoss_impl_1 -strategy {iso_aoss_1} \
+-domain PD_AOSS \
+-lib_cells {ISOHID*}
+
+#-------------------------------------------------------------------------------
+# Ports Setting
+#-------------------------------------------------------------------------------
+
+set_port_attributes -ports [find_objects . -pattern * -object_type port -direction in] -receiver_supply SS_AO
+set_port_attributes -ports [find_objects . -pattern * -object_type port -direction out] -driver_supply SS_AO
+
+set_port_attributes -ports {AO_32K_CLK_SEL AO_BOOT_MODE0 AO_BOOT_MODE1 AO_CLK_MODE0 AO_CLK_MODE1 AO_CXX_INT_IN AO_CXX_INT_OUT AO_XWSE_INT AO_TEST_MODE AO_PMIC_I2C_SCL AO_PMIC_I2C_SDA AO_UART_TX AO_UART_RX AO_SWC AO_SWD} -driver_supply SS_1V8_AO -receiver_supply SS_1V8_AO
+set_port_attributes -ports {AO_SPI_CS AO_SPI_SCK AO_SPI_MOSI AO_SPI_MISO} -driver_supply SS_3V3_USIM2 -receiver_supply SS_3V3_USIM2
+set_port_attributes -ports {AO_USIM_RST AO_USIM_DATA AO_USIM_CLK} -driver_supply SS_3V3_USIM1 -receiver_supply SS_3V3_USIM1
+set_port_attributes -ports {AO_SYSRST_N AO_ERR_STATE_N  AO_LP_EN_N AO_WAKE_DEVICE AO_RTC32K_CLK} -driver_supply SS_1V2_AO -receiver_supply SS_1V2_AO
+
+set_port_attributes -ports u_aoss_func_top/aoss_dummy_out[0] -driver_supply SS_AO 
+#-------------------------------------------------------------------------------
+# RAM Setting
+#-------------------------------------------------------------------------------
+
+set list_ram_aoss [find_objects u_aoss_func_top/u_ahb_ocmem_sv -pattern *TS83*_lib -object_type inst -transitive TRUE]
+set list_usim0_aoss [find_objects u_aoss_func_top/u_ao_usim0 -pattern *TS83*_lib -object_type inst -transitive TRUE]
+set list_usim1_aoss [find_objects u_aoss_func_top/u_ao_usim1 -pattern *TS83*_lib -object_type inst -transitive TRUE]
+set list_ram_cipher [find_objects u_aoss_func_top/u_ao_cipher_sec -pattern *TS83*_lib -object_type inst -transitive TRUE]
+set list_rom_aoss [find_objects . -pattern *srom*_lib -object_type inst -transitive TRUE]
+set list_rom_cipher [find_objects u_aoss_func_top/u_ao_cipher_sec -pattern *srom*_lib -object_type inst -transitive TRUE]
+
+
+foreach i $list_ram_cipher {
+set idx                  [lsearch    $list_ram_aoss "$i"         ]
+set list_ram_aoss        [lreplace   $list_ram_aoss "$idx" "$idx"]
+}
+
+foreach i $list_rom_cipher {
+set idx                  [lsearch    $list_rom_aoss "$i"         ]
+set list_rom_aoss        [lreplace   $list_rom_aoss "$idx" "$idx"]
+}
+
+puts  "//////////////////////////////////"
+puts  "// aoss oc ram list "
+foreach i $list_ram_aoss {puts $i}
+puts  "---------------------------------"
+puts  "\n"
+puts  "//////////////////////////////////"
+puts  "// aoss oc usim list "
+foreach i $list_usim0_aoss {puts $i}
+puts  "---------------------------------"
+puts  "\n"
+puts  "//////////////////////////////////"
+puts  "// cipher ram list"
+foreach i $list_ram_cipher {puts $i}
+puts  "---------------------------------"
+puts  "\n"
+puts  "//////////////////////////////////"
+puts  "// aoss rom list "
+foreach i $list_rom_aoss {puts $i}
+puts  "---------------------------------"
+puts  "\n"
+puts  "//////////////////////////////////"
+puts  "// cipher rom list "
+foreach i $list_rom_cipher {puts $i}
+puts  "---------------------------------"
+puts  "//////////////////////////////////"
+puts $USE_RAM_SIM_MODEL
+puts  "\n"
+
+if { $USE_RAM_SIM_MODEL == 1 } {
+foreach mem_i $list_ram_aoss { 
+connect_supply_net VDD_AO -ports ${mem_i}/VDDCE
+connect_supply_net VDD_AO -ports ${mem_i}/VDDPE
+connect_supply_net VSS    -ports ${mem_i}/VSSE
+}
+
+foreach mem_i $list_usim0_aoss { 
+connect_supply_net VDD_AO -ports ${mem_i}/VDDCE
+connect_supply_net VDD_AO -ports ${mem_i}/VDDPE
+connect_supply_net VSS    -ports ${mem_i}/VSSE
+}
+
+foreach mem_i $list_usim1_aoss { 
+connect_supply_net VDD_AO -ports ${mem_i}/VDDCE
+connect_supply_net VDD_AO -ports ${mem_i}/VDDPE
+connect_supply_net VSS    -ports ${mem_i}/VSSE
+}
+
+foreach mem_i $list_ram_cipher { 
+connect_supply_net VDD_N205 -ports ${mem_i}/VDDCE
+connect_supply_net VDD_N205 -ports ${mem_i}/VDDPE
+connect_supply_net VSS      -ports ${mem_i}/VSSE
+}
+
+foreach mem_i $list_rom_aoss { 
+connect_supply_net VDD_AO -ports ${mem_i}/VDDE
+connect_supply_net VSS    -ports ${mem_i}/VSSE
+connect_supply_net VSS    -ports ${mem_i}/VSS
+}
+
+foreach mem_i $list_rom_cipher { 
+connect_supply_net VDD_N205 -ports ${mem_i}/VDDE
+connect_supply_net VSS      -ports ${mem_i}/VSSE
+connect_supply_net VSS      -ports ${mem_i}/VSS
+}
+} else {
+foreach mem_i $list_ram_aoss { 
+connect_supply_net VDD_AO -ports ${mem_i}/VDDCE
+connect_supply_net VDD_AO -ports ${mem_i}/VDDPE
+connect_supply_net VSS    -ports ${mem_i}/VSSE
+connect_supply_net VSS    -ports ${mem_i}/VSS
+}
+
+foreach mem_i $list_usim0_aoss { 
+connect_supply_net VDD_AO -ports ${mem_i}/VDDCE
+connect_supply_net VDD_AO -ports ${mem_i}/VDDPE
+connect_supply_net VSS    -ports ${mem_i}/VSSE
+}
+
+foreach mem_i $list_usim1_aoss { 
+connect_supply_net VDD_AO -ports ${mem_i}/VDDCE
+connect_supply_net VDD_AO -ports ${mem_i}/VDDPE
+connect_supply_net VSS    -ports ${mem_i}/VSSE
+}
+
+foreach mem_i $list_ram_cipher { 
+connect_supply_net VDD_N205 -ports ${mem_i}/VDDCE
+connect_supply_net VDD_N205 -ports ${mem_i}/VDDPE
+connect_supply_net VSS      -ports ${mem_i}/VSSE
+}
+
+foreach mem_i $list_rom_aoss { 
+connect_supply_net VDD_AO -ports ${mem_i}/VDDE
+connect_supply_net VSS    -ports ${mem_i}/VSSE
+connect_supply_net VSS    -ports ${mem_i}/VSS
+}
+
+foreach mem_i $list_rom_cipher { 
+connect_supply_net VDD_N205 -ports ${mem_i}/VDDE
+connect_supply_net VSS      -ports ${mem_i}/VSSE
+connect_supply_net VSS      -ports ${mem_i}/VSS
+}
+}
+
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+# RAM Setting
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+                                                                                                                         
+##}                                                                                                                                            
+#
+#if { $USE_RAM_SIM_MODEL == 1 } {
+#    foreach ram $L2_rams0 {
+#        set power_pin_vddce  ${ram}/VDDCE
+#        set power_pin_vddpe  ${ram}/VDDPE
+#        set power_pin_vsse   ${ram}/VSSE
+#        connect_supply_net VDD_AO -ports $power_pin_vddce
+#        connect_supply_net VDD_AO -ports $power_pin_vddpe
+#        connect_supply_net VSS       -ports $power_pin_vsse
+#    }
+#} else {
+#    foreach ram $L2_rams0 {
+#        set power_pin_vddce  ${ram}/VDDCE
+#        set power_pin_vddpe  ${ram}/VDDPE
+#        set power_pin_vsse   ${ram}/VSSE
+#        set power_pin_vss    ${ram}/VSS
+#        connect_supply_net VDD_AO -ports $power_pin_vddce
+#        connect_supply_net VDD_AO -ports $power_pin_vddpe
+#        connect_supply_net VSS       -ports $power_pin_vsse
+##        connect_supply_net VSS       -ports $power_pin_vss
+#    }
+#}
+#
+#
+#
+#
+#-------------------------------------------------------------------------------
+# IO PAD Supply connect
+#-------------------------------------------------------------------------------
+
+#########   EFUSE     ##############################
+connect_supply_net VDD_AO -ports { \
+u_aoss_func_top/u_TEF22ULP64X32HD18_PHRM/VDD \
+}
+
+connect_supply_net EFUSE_VQPS -ports { \
+u_aoss_func_top/u_TEF22ULP64X32HD18_PHRM/VQPS \
+}
+
+connect_supply_net VSS -ports { \
+u_aoss_func_top/u_TEF22ULP64X32HD18_PHRM/VSS \
+}
+
+#########   IO PAD DOMAIN 0    ######################
+connect_supply_net VDD1V2_AO -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_sysrst_n_pad/u_INNO_GPIO_CELL/VDDQ \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_lp_en_n_pad/u_INNO_GPIO_CELL/VDDQ \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_err_state_n_pad/u_INNO_GPIO_CELL/VDDQ \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_wake_device_pad/u_INNO_GPIO_CELL/VDDQ \
+}
+
+connect_supply_net VDD_AO -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_sysrst_n_pad/u_INNO_GPIO_CELL/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_lp_en_n_pad/u_INNO_GPIO_CELL/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_err_state_n_pad/u_INNO_GPIO_CELL/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_wake_device_pad/u_INNO_GPIO_CELL/VDD \
+}
+
+connect_supply_net VSS -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_sysrst_n_pad/u_INNO_GPIO_CELL/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_lp_en_n_pad/u_INNO_GPIO_CELL/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_err_state_n_pad/u_INNO_GPIO_CELL/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_wake_device_pad/u_INNO_GPIO_CELL/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_sysrst_n_pad/u_INNO_GPIO_CELL/VSSQ \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_lp_en_n_pad/u_INNO_GPIO_CELL/VSSQ \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_err_state_n_pad/u_INNO_GPIO_CELL/VSSQ \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_wake_device_pad/u_INNO_GPIO_CELL/VSSQ \
+}
+
+####ss#####   IO PAD DOMAIN 1    ######################
+connect_supply_net VDD1V2_AO -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_rtc32k_clk_pad/u_INNO_GPIO_CELL/VDDQ \
+}
+
+connect_supply_net VDD_AO -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_rtc32k_clk_pad/u_INNO_GPIO_CELL/VDD \
+}
+
+connect_supply_net VSS -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_rtc32k_clk_pad/u_INNO_GPIO_CELL/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_rtc32k_clk_pad/u_INNO_GPIO_CELL/VSSQ \
+}
+
+#########   IO PAD DOMAIN 2    ######################
+connect_supply_net VDD1V8_AO -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_boot_mode0_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_boot_mode1_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_clk_mode0_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_clk_mode1_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_cxx_int_in_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_cxx_int_out_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_xwse_int_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_32k_clk_sel_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_test_mode_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_pmic_i2c_scl_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_pmic_i2c_sda_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_uart_tx_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_uart_rx_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_swc_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_swd_pad/u_PRWDWUWHWSWDGE_H_G/VDDPST \
+}
+
+connect_supply_net VDD_AO -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_boot_mode0_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_boot_mode1_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_clk_mode0_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_clk_mode1_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_cxx_int_in_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_cxx_int_out_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_xwse_int_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_32k_clk_sel_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_test_mode_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_pmic_i2c_scl_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_pmic_i2c_sda_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_uart_tx_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_uart_rx_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_swc_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_swd_pad/u_PRWDWUWHWSWDGE_H_G/VDD \
+}
+
+connect_supply_net VSS -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_boot_mode0_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_boot_mode1_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_clk_mode0_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_clk_mode1_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_cxx_int_in_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_cxx_int_out_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_xwse_int_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_32k_clk_sel_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_test_mode_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_pmic_i2c_scl_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_pmic_i2c_sda_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_uart_tx_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_uart_rx_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_swc_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_swd_pad/u_PRWDWUWHWSWDGE_H_G/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_boot_mode0_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_boot_mode1_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_clk_mode0_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_clk_mode1_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_cxx_int_in_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_cxx_int_out_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_xwse_int_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_32k_clk_sel_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_test_mode_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_pmic_i2c_scl_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_pmic_i2c_sda_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_uart_tx_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_uart_rx_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_swc_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_swd_pad/u_PRWDWUWHWSWDGE_H_G/VSSPST \
+}
+
+#########   IO PAD DOMAIN 3    ######################
+connect_supply_net VDD_AO -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_usim_clk_pad/u_PRWHSWCDGSIM_H/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_usim_rst_pad/u_PRWHSWCDGSIM_H/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_usim_data_pad/u_PRWHSWCDGSIM_H/VDD \
+}
+
+connect_supply_net VDD1V8_USIM1 -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_usim_clk_pad/u_PRWHSWCDGSIM_H/VDDPST18 \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_usim_rst_pad/u_PRWHSWCDGSIM_H/VDDPST18 \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_usim_data_pad/u_PRWHSWCDGSIM_H/VDDPST18 \
+}
+
+connect_supply_net VDD3V3_USIM1 -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_usim_clk_pad/u_PRWHSWCDGSIM_H/VDDPST3318 \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_usim_rst_pad/u_PRWHSWCDGSIM_H/VDDPST3318 \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_usim_data_pad/u_PRWHSWCDGSIM_H/VDDPST3318 \
+}
+
+connect_supply_net VDDPST180_USIM1 -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_usim_clk_pad/u_PRWHSWCDGSIM_H/VDDPST180 \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_usim_rst_pad/u_PRWHSWCDGSIM_H/VDDPST180 \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_usim_data_pad/u_PRWHSWCDGSIM_H/VDDPST180 \
+}
+
+connect_supply_net VSS -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_usim_clk_pad/u_PRWHSWCDGSIM_H/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_usim_rst_pad/u_PRWHSWCDGSIM_H/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_usim_data_pad/u_PRWHSWCDGSIM_H/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_usim_clk_pad/u_PRWHSWCDGSIM_H/VSSPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_usim_rst_pad/u_PRWHSWCDGSIM_H/VSSPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_usim_data_pad/u_PRWHSWCDGSIM_H/VSSPST \
+}
+
+#########   IO PAD DOMAIN 4    ######################
+connect_supply_net VDD_AO -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_cs_pad/u_PRWHSWCDGSIM_H/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_sck_pad/u_PRWHSWCDGSIM_H/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_mosi_pad/u_PRWHSWCDGSIM_H/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_miso_pad/u_PRWHSWCDGSIM_H/VDD \
+}
+
+connect_supply_net VDD1V8_USIM2 -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_cs_pad/u_PRWHSWCDGSIM_H/VDDPST18 \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_sck_pad/u_PRWHSWCDGSIM_H/VDDPST18 \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_mosi_pad/u_PRWHSWCDGSIM_H/VDDPST18 \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_miso_pad/u_PRWHSWCDGSIM_H/VDDPST18 \
+}
+
+connect_supply_net VDD3V3_USIM2 -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_cs_pad/u_PRWHSWCDGSIM_H/VDDPST3318 \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_sck_pad/u_PRWHSWCDGSIM_H/VDDPST3318 \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_mosi_pad/u_PRWHSWCDGSIM_H/VDDPST3318 \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_miso_pad/u_PRWHSWCDGSIM_H/VDDPST3318 \
+}
+
+connect_supply_net VDDPST180_USIM2 -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_cs_pad/u_PRWHSWCDGSIM_H/VDDPST180 \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_sck_pad/u_PRWHSWCDGSIM_H/VDDPST180 \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_mosi_pad/u_PRWHSWCDGSIM_H/VDDPST180 \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_miso_pad/u_PRWHSWCDGSIM_H/VDDPST180 \
+}
+
+connect_supply_net VSS -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_cs_pad/u_PRWHSWCDGSIM_H/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_sck_pad/u_PRWHSWCDGSIM_H/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_mosi_pad/u_PRWHSWCDGSIM_H/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_miso_pad/u_PRWHSWCDGSIM_H/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_cs_pad/u_PRWHSWCDGSIM_H/VSSPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_sck_pad/u_PRWHSWCDGSIM_H/VSSPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_mosi_pad/u_PRWHSWCDGSIM_H/VSSPST \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_ao_io_ring/u_ao_spi_miso_pad/u_PRWHSWCDGSIM_H/VSSPST \
+}
+
+###############################################
+connect_supply_net VDD_AO -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io0_vref_inno_poc_cell/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io0_vref_vref/u_INNO_VREF_CELL/VDD \
+}
+
+connect_supply_net VDD1V2_AO -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io0_vref_inno_poc_cell/VDDQ \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io0_vref_vref/u_INNO_VREF_CELL/VDDQ \
+}
+
+connect_supply_net VSS -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io0_vref_inno_poc_cell/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io0_vref_inno_poc_cell/VSSQ \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io0_vref_vref/u_INNO_VREF_CELL/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io0_vref_vref/u_INNO_VREF_CELL/VSSQ \
+}
+
+connect_supply_net VDD_AO -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io1_vref_inno_poc_cell/VDD \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io1_vref_vref/u_INNO_VREF_CELL/VDD \
+}
+connect_supply_net VDD1V2_AO -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io1_vref_inno_poc_cell/VDDQ \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io1_vref_vref/u_INNO_VREF_CELL/VDDQ \
+}
+
+connect_supply_net VSS -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io1_vref_inno_poc_cell/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io1_vref_inno_poc_cell/VSSQ \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io1_vref_vref/u_INNO_VREF_CELL/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io1_vref_vref/u_INNO_VREF_CELL/VSSQ \
+}
+
+
+###############################################
+connect_supply_net VDD_AO -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io3_poc_PVDD18POCSD_H/VDD \
+}
+
+connect_supply_net VDD1V8_USIM1 -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io3_poc_PVDD18POCSD_H/VDDPST18 \
+}
+
+connect_supply_net VDD3V3_USIM1 -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io3_poc_PVDD18POCSD_H/VDDPST3318 \
+}
+
+connect_supply_net VDDPST180_USIM1 -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io3_poc_PVDD18POCSD_H/VDDPST180 \
+}
+
+connect_supply_net VSS -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io3_poc_PVDD18POCSD_H/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io3_poc_PVDD18POCSD_H/VSSPST \
+}
+
+###############################################
+connect_supply_net VDD_AO -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io4_poc_PVDD18POCSD_H/VDD \
+}
+
+connect_supply_net VDD1V8_USIM2 -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io4_poc_PVDD18POCSD_H/VDDPST18 \
+}
+
+connect_supply_net VDD3V3_USIM2 -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io4_poc_PVDD18POCSD_H/VDDPST3318 \
+}
+
+connect_supply_net VDDPST180_USIM2 -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io4_poc_PVDD18POCSD_H/VDDPST180 \
+}
+
+connect_supply_net VSS -ports { \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io4_poc_PVDD18POCSD_H/VSS \
+u_aoss_func_top/u_ao_io/u_ao_io_top/u_io4_poc_PVDD18POCSD_H/VSSPST \
+}
+
+
+#-------------------------------------------------------------------------------
+# Power State Setting
+#-------------------------------------------------------------------------------
+add_power_state  -supply  SS_AO \
+                    -state ON    {-supply_expr {power  == {FULL_ON 0.72} && ground  == {FULL_ON 0.0} } }
+
+#add_power_state  -supply  SS_MAIN \
+#                    -state ON   {-supply_expr {power  == {FULL_ON 0.72} && ground  == {FULL_ON 0.0} } } \
+#                    -state OFF  {-supply_expr {power  == {OFF         } && ground  == {FULL_ON 0.0} } }
+
+add_power_state  -supply  SS_N205 \
+                    -state ON     {-supply_expr {power == {FULL_ON 0.72} && ground  == {FULL_ON 0.0} } } \
+                    -state OFF    {-supply_expr {power == {OFF         } && ground  == {FULL_ON 0.0} } }
+
+add_power_state  -supply  SS_1V8_AO \
+                    -state ON   {-supply_expr {power  == {FULL_ON 1.8} && ground  == {FULL_ON 0.0} } }
+
+add_power_state  -supply  SS_1V2_AO \
+                    -state ON   {-supply_expr {power  == {FULL_ON 1.2} && ground  == {FULL_ON 0.0} } }
+
+add_power_state  -supply  SS_1V8_USIM2 \
+                    -state ON   {-supply_expr {power  == {FULL_ON 1.8} && ground  == {FULL_ON 0.0} } }
+
+add_power_state  -supply  SS_1V8_USIM1 \
+                    -state ON   {-supply_expr {power  == {FULL_ON 1.8} && ground  == {FULL_ON 0.0} } }
+
+add_power_state  -supply  SS_3V3_USIM2 \
+                    -state ON   {-supply_expr {power  == {FULL_ON 3.3} && ground  == {FULL_ON 0.0} } }
+
+add_power_state  -supply  SS_3V3_USIM1 \
+                    -state ON   {-supply_expr {power  == {FULL_ON 3.3} && ground  == {FULL_ON 0.0} } }
+
+add_power_state  -supply  SS_EFUSE \
+                    -state ON   {-supply_expr {power  == {FULL_ON 1.62} && ground  == {FULL_ON 0.0} } }
+
+add_power_state  -supply  SS_VDDPST180_USIM1 \
+                    -state ON   {-supply_expr {power  == {FULL_ON 1.62} && ground  == {FULL_ON 0.0} } }
+
+add_power_state  -supply  SS_VDDPST180_USIM2 \
+                    -state ON   {-supply_expr {power  == {FULL_ON 1.62} && ground  == {FULL_ON 0.0} } }
+
+
+################################################################
+################################################################
+
+#add_power_state -domain PD_AOSS \
+#                 -state ST1 " -logic_expr { SS_AO == ON  && SS_MAIN == ON  && SS_N205 == ON } " \
+#                 -state ST2 " -logic_expr { SS_AO == ON  && SS_MAIN == ON && SS_N205 == OFF } " \
+#                 -state ST3 " -logic_expr { SS_AO == ON  && SS_MAIN == OFF && SS_N205 == OFF} "
+                 
+add_power_state -domain PD_AOSS \
+                 -state ST1 " -logic_expr { SS_AO == ON  && SS_N205 == ON } " \
+                 -state ST2 " -logic_expr { SS_AO == ON  && SS_N205 == OFF } "
